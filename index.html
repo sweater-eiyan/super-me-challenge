@@ -5,1500 +5,648 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SUPER ME CHALLENGE</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+:root{--red:#D10000;--dark-red:#8B0000;--black:#0A0A0A;--white:#F0F0F0;--gray:#888;--dark-gray:#222;--yellow:#FFD700;--green:#00AA00;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:var(--white);font-family:'Press Start 2P',monospace;font-size:10px;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;overflow-x:hidden;}
+#game-container{width:100%;max-width:420px;min-height:100vh;background:var(--black);display:flex;flex-direction:column;border-left:2px solid #333;border-right:2px solid #333;}
+.screen{display:none;flex-direction:column;min-height:100vh;}
+.screen.active{display:flex;}
 
-  :root {
-    --red: #D10000;
-    --dark-red: #8B0000;
-    --black: #0A0A0A;
-    --white: #F0F0F0;
-    --gray: #888888;
-    --dark-gray: #222222;
-    --yellow: #FFD700;
-    --green: #00AA00;
-    --pixel: 2px;
-  }
+/* TITLE */
+#title-screen{align-items:center;justify-content:center;padding:20px;gap:20px;position:relative;overflow:hidden;}
+#title-screen::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.015) 3px,rgba(255,255,255,.015) 4px);pointer-events:none;}
+.brand-logo{background:var(--red);padding:10px 20px;text-align:center;border:3px solid var(--white);position:relative;}
+.brand-logo::after{content:'';position:absolute;inset:2px;border:1px solid rgba(255,255,255,.3);pointer-events:none;}
+.brand-name{font-size:18px;color:var(--white);letter-spacing:2px;text-shadow:2px 2px 0 #000;display:block;}
+.brand-sub{font-size:7px;color:rgba(255,255,255,.7);display:block;margin-top:4px;}
+.title-pixel-art{width:160px;height:160px;image-rendering:pixelated;}
+.game-title{text-align:center;line-height:2;}
+.game-title .main{font-size:14px;color:var(--yellow);text-shadow:2px 2px 0 var(--dark-red);}
+.game-title .sub{font-size:8px;color:var(--gray);}
+.blink{animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.title-btn{background:var(--red);color:var(--white);border:3px solid var(--white);padding:14px 28px;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer;width:100%;max-width:280px;text-align:center;box-shadow:4px 4px 0 var(--dark-red);transition:transform .1s;}
+.title-btn:active{transform:scale(.97);}
+.title-btn.secondary{background:var(--dark-gray);border-color:var(--gray);font-size:9px;box-shadow:4px 4px 0 #111;}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ITEM SELECT */
+#item-select{padding:16px;gap:12px;}
+.screen-header{background:var(--dark-gray);border:2px solid var(--red);padding:10px;text-align:center;font-size:9px;color:var(--yellow);}
+.screen-subtitle{font-size:7px;color:var(--gray);text-align:center;margin-top:4px;}
+.item-cards{display:flex;flex-direction:column;gap:10px;flex:1;}
+.item-card{border:2px solid var(--gray);background:var(--dark-gray);padding:12px;cursor:pointer;position:relative;transition:border-color .1s,transform .1s;}
+.item-card:active{transform:scale(.98);}
+.item-card.easy{border-color:var(--green);}
+.item-card.normal{border-color:var(--yellow);}
+.item-card.hard{border-color:var(--red);}
+.item-card-inner{display:flex;gap:10px;align-items:center;}
+.item-pixel{width:56px;height:56px;flex-shrink:0;image-rendering:pixelated;}
+.item-info{flex:1;}
+.item-name{font-size:9px;color:var(--white);margin-bottom:6px;line-height:1.6;}
+.item-stats{display:flex;flex-direction:column;gap:3px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;font-size:7px;}
+.stat-label{color:var(--gray);}
+.stat-bar-wrap{display:flex;gap:2px;}
+.stat-pip{width:8px;height:8px;background:var(--dark-gray);border:1px solid var(--gray);}
+.stat-pip.filled.easy{background:var(--green);border-color:var(--green);}
+.stat-pip.filled.normal{background:var(--yellow);border-color:var(--yellow);}
+.stat-pip.filled.hard{background:var(--red);border-color:var(--red);}
+.item-tag{position:absolute;top:8px;right:8px;font-size:6px;padding:3px 6px;border:1px solid;}
+.item-tag.easy{color:var(--green);border-color:var(--green);}
+.item-tag.normal{color:var(--yellow);border-color:var(--yellow);}
+.item-tag.hard{color:var(--red);border-color:var(--red);}
 
-  body {
-    background: var(--black);
-    color: var(--white);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    overflow-x: hidden;
-  }
+/* GAME */
+#game-screen{padding:0;}
+.hud{background:#111;border-bottom:3px solid var(--red);padding:8px 10px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.hud-top{display:flex;justify-content:space-between;align-items:center;font-size:7px;color:var(--gray);}
+.hud-score{color:var(--yellow);font-size:8px;}
+.hud-target{color:var(--white);font-size:7px;}
+.hud-mid{display:flex;align-items:center;gap:8px;}
+.face-icon{width:36px;height:36px;flex-shrink:0;image-rendering:pixelated;}
+.timer-wrap{flex:1;}
+.timer-label{font-size:6px;color:var(--gray);margin-bottom:3px;}
+.timer-bar-outer{height:14px;background:#333;border:2px solid var(--gray);overflow:hidden;}
+.timer-bar-inner{height:100%;background:var(--red);transition:width .1s linear,background .3s;}
+.timer-bar-inner.warn{background:var(--yellow);}
+.timer-bar-inner.ok{background:var(--green);}
+.timer-text{font-size:7px;color:var(--white);text-align:right;margin-top:2px;}
+.game-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.char-area{background:#111;display:flex;justify-content:center;align-items:flex-end;padding:8px;height:120px;flex-shrink:0;position:relative;border-bottom:2px solid #333;overflow:hidden;}
+.char-canvas{image-rendering:pixelated;width:100px;height:100px;}
+.sweat-particle{position:absolute;font-size:12px;animation:sweat-float 1s ease-out forwards;pointer-events:none;}
+@keyframes sweat-float{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-30px) scale(.5)}}
+.quiz-area{flex:1;background:var(--dark-gray);border:2px solid #444;margin:8px;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;}
+.quiz-header{background:var(--black);border:2px solid var(--red);padding:6px 10px;display:flex;justify-content:space-between;align-items:center;}
+.quiz-label{font-size:7px;color:var(--red);}
+.quiz-num{font-size:7px;color:var(--gray);}
+.quiz-prompt{font-size:8px;color:var(--white);line-height:2;padding:4px 0;}
+.quiz-checkbox-wrap{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px;border:2px solid #444;background:#1a1a1a;}
+.pixel-checkbox{width:20px;height:20px;border:2px solid var(--gray);background:var(--black);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.pixel-checkbox.checked{background:var(--red);border-color:var(--red);}
+.pixel-checkbox.checked::after{content:'✓';color:white;font-size:12px;}
+.checkbox-label{font-size:8px;color:var(--white);line-height:1.8;}
+.quiz-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+.grid-cell{aspect-ratio:1;background:#333;border:2px solid #555;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:border-color .1s;}
+.grid-cell.selected{border-color:var(--red);background:rgba(209,0,0,.2);}
+.grid-cell:active{transform:scale(.95);}
+.quiz-choices{display:flex;flex-direction:column;gap:6px;}
+.choice-btn{background:#1a1a1a;border:2px solid #444;color:var(--white);font-family:'Press Start 2P',monospace;font-size:8px;padding:10px 12px;text-align:left;cursor:pointer;line-height:1.8;}
+.choice-btn.correct{border-color:var(--green);background:rgba(0,170,0,.15);color:var(--green);}
+.choice-btn.wrong{border-color:var(--red);background:rgba(209,0,0,.15);color:var(--red);}
+.quiz-text-input{background:#1a1a1a;border:2px solid var(--gray);color:var(--white);font-family:'Press Start 2P',monospace;font-size:10px;padding:10px;width:100%;outline:none;letter-spacing:2px;}
+.quiz-text-input:focus{border-color:var(--yellow);}
+.submit-btn{background:var(--red);color:var(--white);border:2px solid var(--white);font-family:'Press Start 2P',monospace;font-size:9px;padding:10px;width:100%;cursor:pointer;}
+.feedback{font-size:8px;padding:6px 10px;border:2px solid;text-align:center;}
+.feedback.ok{color:var(--green);border-color:var(--green);background:rgba(0,170,0,.1);}
+.feedback.err{color:var(--red);border-color:var(--red);background:rgba(209,0,0,.1);}
+.next-btn{background:var(--dark-gray);border:2px solid var(--yellow);color:var(--yellow);font-family:'Press Start 2P',monospace;font-size:8px;padding:10px;width:100%;cursor:pointer;display:none;}
+.next-btn.visible{display:block;}
 
-  #game-container {
-    width: 100%;
-    max-width: 420px;
-    min-height: 100vh;
-    background: var(--black);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    border-left: 2px solid #333;
-    border-right: 2px solid #333;
-  }
+/* SOLD OUT */
+#sold-out-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:100;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;}
+#sold-out-overlay.active{display:flex;}
+.sold-out-text{font-size:28px;color:var(--red);text-shadow:3px 3px 0 #000;text-align:center;animation:shake .3s ease 3;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.sold-out-sub{font-size:9px;color:var(--gray);text-align:center;line-height:2;}
+.score-display{text-align:center;line-height:2;}
+.score-label{font-size:8px;color:var(--gray);}
 
-  /* ===== SCREENS ===== */
-  .screen { display: none; flex-direction: column; min-height: 100vh; }
-  .screen.active { display: flex; }
+/* INITIALS */
+#initials-screen{padding:20px;gap:16px;align-items:center;justify-content:center;}
+.initials-title{font-size:12px;color:var(--yellow);text-align:center;line-height:2;}
+.initials-sub{font-size:8px;color:var(--gray);text-align:center;line-height:2;}
+.initials-input-wrap{display:flex;gap:8px;justify-content:center;}
+.initial-box{width:48px;height:56px;background:var(--black);border:3px solid var(--gray);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--white);}
+.initial-box.active{border-color:var(--yellow);}
+.initial-box.filled{border-color:var(--green);color:var(--green);}
+.initials-keyboard{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;width:100%;max-width:340px;}
+.key-btn{background:var(--dark-gray);border:2px solid #444;color:var(--white);font-family:'Press Start 2P',monospace;font-size:8px;padding:8px 0;cursor:pointer;text-align:center;}
+.key-btn.special{color:var(--yellow);border-color:var(--yellow);}
+.confirm-btn{background:var(--red);border:3px solid var(--white);color:var(--white);font-family:'Press Start 2P',monospace;font-size:10px;padding:14px;width:100%;max-width:280px;cursor:pointer;}
+.confirm-btn:disabled{background:#444;border-color:#666;color:#666;cursor:not-allowed;}
 
-  /* ===== TITLE SCREEN ===== */
-  #title-screen {
-    background: var(--black);
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    gap: 24px;
-    position: relative;
-    overflow: hidden;
-  }
+/* RANKING */
+#ranking-screen{padding:0;}
+#ranking-screen .inner{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1;}
+.ranking-tabs{display:flex;border:2px solid #444;}
+.rank-tab{flex:1;background:var(--dark-gray);border:none;border-right:1px solid #444;color:var(--gray);font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 4px;cursor:pointer;text-align:center;line-height:1.8;}
+.rank-tab:last-child{border-right:none;}
+.rank-tab.active{background:var(--red);color:var(--white);}
+.ranking-table{display:flex;flex-direction:column;gap:4px;flex:1;}
+.rank-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--dark-gray);border:1px solid #333;}
+.rank-row.top3{border-color:var(--yellow);}
+.rank-row.empty{opacity:.4;}
+.rank-pos{font-size:8px;color:var(--yellow);width:24px;flex-shrink:0;}
+.rank-initials{font-size:11px;color:var(--white);width:48px;flex-shrink:0;letter-spacing:3px;}
+.rank-score{font-size:9px;color:var(--yellow);text-align:right;}
+.rank-label{font-size:6px;color:var(--gray);text-align:right;}
 
-  #title-screen::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(255,255,255,0.015) 3px,
-      rgba(255,255,255,0.015) 4px
-    );
-    pointer-events: none;
-  }
-
-  .brand-logo {
-    background: var(--red);
-    padding: 10px 20px;
-    text-align: center;
-    border: 3px solid var(--white);
-    image-rendering: pixelated;
-    position: relative;
-  }
-  .brand-logo::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    border: 1px solid rgba(255,255,255,0.3);
-    pointer-events: none;
-  }
-  .brand-name {
-    font-size: 18px;
-    color: var(--white);
-    letter-spacing: 2px;
-    text-shadow: 2px 2px 0 #000;
-    display: block;
-  }
-  .brand-sub {
-    font-size: 7px;
-    color: rgba(255,255,255,0.7);
-    display: block;
-    margin-top: 4px;
-    letter-spacing: 1px;
-  }
-
-  .title-pixel-art {
-    width: 160px;
-    height: 160px;
-    image-rendering: pixelated;
-  }
-
-  .game-title {
-    text-align: center;
-    line-height: 2;
-  }
-  .game-title .main { font-size: 14px; color: var(--yellow); text-shadow: 2px 2px 0 var(--dark-red); }
-  .game-title .sub { font-size: 8px; color: var(--gray); }
-
-  .blink {
-    animation: blink 1s step-end infinite;
-  }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-  .title-btn {
-    background: var(--red);
-    color: var(--white);
-    border: 3px solid var(--white);
-    padding: 14px 28px;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    cursor: pointer;
-    width: 100%;
-    max-width: 280px;
-    text-align: center;
-    letter-spacing: 1px;
-    position: relative;
-    transition: transform 0.1s;
-  }
-  .title-btn:active { transform: scale(0.97); }
-  .title-btn.secondary {
-    background: var(--dark-gray);
-    border-color: var(--gray);
-    font-size: 9px;
-  }
-  .pixel-shadow {
-    box-shadow: 4px 4px 0 var(--dark-red);
-  }
-  .pixel-shadow.secondary {
-    box-shadow: 4px 4px 0 #111;
-  }
-
-  /* ===== ITEM SELECT ===== */
-  #item-select {
-    padding: 16px;
-    gap: 12px;
-  }
-  .screen-header {
-    background: var(--dark-gray);
-    border: 2px solid var(--red);
-    padding: 10px;
-    text-align: center;
-    font-size: 9px;
-    color: var(--yellow);
-    letter-spacing: 1px;
-  }
-  .screen-subtitle {
-    font-size: 7px;
-    color: var(--gray);
-    text-align: center;
-    margin-top: 4px;
-  }
-
-  .item-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    flex: 1;
-  }
-
-  .item-card {
-    border: 2px solid var(--gray);
-    background: var(--dark-gray);
-    padding: 12px;
-    cursor: pointer;
-    position: relative;
-    transition: border-color 0.1s, transform 0.1s;
-  }
-  .item-card:active { transform: scale(0.98); }
-  .item-card.easy { border-color: var(--green); }
-  .item-card.normal { border-color: var(--yellow); }
-  .item-card.hard { border-color: var(--red); }
-  .item-card:hover { filter: brightness(1.2); }
-
-  .item-card-inner { display: flex; gap: 10px; align-items: center; }
-
-  .item-pixel {
-    width: 56px;
-    height: 56px;
-    flex-shrink: 0;
-    image-rendering: pixelated;
-  }
-
-  .item-info { flex: 1; }
-  .item-name { font-size: 9px; color: var(--white); margin-bottom: 6px; line-height: 1.6; }
-  .item-stats { display: flex; flex-direction: column; gap: 3px; }
-  .stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 7px; }
-  .stat-label { color: var(--gray); }
-  .stat-bar-wrap { display: flex; gap: 2px; }
-  .stat-pip {
-    width: 8px; height: 8px;
-    background: var(--dark-gray);
-    border: 1px solid var(--gray);
-  }
-  .stat-pip.filled.easy { background: var(--green); border-color: var(--green); }
-  .stat-pip.filled.normal { background: var(--yellow); border-color: var(--yellow); }
-  .stat-pip.filled.hard { background: var(--red); border-color: var(--red); }
-
-  .item-tag {
-    position: absolute;
-    top: 8px; right: 8px;
-    font-size: 6px;
-    padding: 3px 6px;
-    border: 1px solid;
-  }
-  .item-tag.easy { color: var(--green); border-color: var(--green); }
-  .item-tag.normal { color: var(--yellow); border-color: var(--yellow); }
-  .item-tag.hard { color: var(--red); border-color: var(--red); }
-
-  /* ===== GAME SCREEN ===== */
-  #game-screen { padding: 0; }
-
-  /* HUD */
-  .hud {
-    background: #111;
-    border-bottom: 3px solid var(--red);
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  .hud-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 7px;
-    color: var(--gray);
-  }
-  .hud-score { color: var(--yellow); font-size: 8px; }
-  .hud-target { color: var(--white); font-size: 7px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  .hud-mid {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .face-icon {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    image-rendering: pixelated;
-  }
-  .timer-wrap { flex: 1; }
-  .timer-label { font-size: 6px; color: var(--gray); margin-bottom: 3px; }
-  .timer-bar-outer {
-    height: 14px;
-    background: #333;
-    border: 2px solid var(--gray);
-    position: relative;
-    overflow: hidden;
-  }
-  .timer-bar-inner {
-    height: 100%;
-    background: var(--red);
-    transition: width 0.1s linear, background 0.3s;
-  }
-  .timer-bar-inner.warn { background: var(--yellow); }
-  .timer-bar-inner.ok { background: var(--green); }
-  .timer-text { font-size: 7px; color: var(--white); text-align: right; margin-top: 2px; }
-
-  /* Main game area */
-  .game-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* Character area */
-  .char-area {
-    background: #111;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    padding: 8px;
-    height: 120px;
-    flex-shrink: 0;
-    position: relative;
-    border-bottom: 2px solid #333;
-    overflow: hidden;
-  }
-  .char-canvas {
-    image-rendering: pixelated;
-    width: 100px;
-    height: 100px;
-  }
-  .sweat-particle {
-    position: absolute;
-    font-size: 12px;
-    animation: sweat-float 1s ease-out forwards;
-    pointer-events: none;
-  }
-  @keyframes sweat-float {
-    0% { opacity: 1; transform: translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateY(-30px) scale(0.5); }
-  }
-
-  /* Quiz area */
-  .quiz-area {
-    flex: 1;
-    background: var(--dark-gray);
-    border: 2px solid #444;
-    margin: 8px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 0;
-    overflow-y: auto;
-  }
-
-  .quiz-header {
-    background: var(--black);
-    border: 2px solid var(--red);
-    padding: 6px 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .quiz-label { font-size: 7px; color: var(--red); }
-  .quiz-num { font-size: 7px; color: var(--gray); }
-
-  .quiz-prompt {
-    font-size: 8px;
-    color: var(--white);
-    line-height: 2;
-    padding: 4px 0;
-  }
-
-  /* Checkbox type */
-  .quiz-checkbox-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    padding: 8px;
-    border: 2px solid #444;
-    background: #1a1a1a;
-  }
-  .pixel-checkbox {
-    width: 20px; height: 20px;
-    border: 2px solid var(--gray);
-    background: var(--black);
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .pixel-checkbox.checked { background: var(--red); border-color: var(--red); }
-  .pixel-checkbox.checked::after { content: '✓'; color: white; font-size: 12px; }
-  .checkbox-label { font-size: 8px; color: var(--white); line-height: 1.8; }
-
-  /* Grid type */
-  .quiz-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-  }
-  .grid-cell {
-    aspect-ratio: 1;
-    background: #333;
-    border: 2px solid #555;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    image-rendering: pixelated;
-    transition: border-color 0.1s;
-  }
-  .grid-cell.selected { border-color: var(--red); background: rgba(209,0,0,0.2); }
-  .grid-cell:active { transform: scale(0.95); }
-
-  /* Choice type */
-  .quiz-choices { display: flex; flex-direction: column; gap: 6px; }
-  .choice-btn {
-    background: #1a1a1a;
-    border: 2px solid #444;
-    color: var(--white);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
-    padding: 10px 12px;
-    text-align: left;
-    cursor: pointer;
-    line-height: 1.8;
-    transition: border-color 0.1s, background 0.1s;
-  }
-  .choice-btn:active { background: #2a2a2a; }
-  .choice-btn.correct { border-color: var(--green); background: rgba(0,170,0,0.15); color: var(--green); }
-  .choice-btn.wrong { border-color: var(--red); background: rgba(209,0,0,0.15); color: var(--red); }
-
-  /* Text input type */
-  .quiz-text-input {
-    background: #1a1a1a;
-    border: 2px solid var(--gray);
-    color: var(--white);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    padding: 10px;
-    width: 100%;
-    outline: none;
-    letter-spacing: 2px;
-  }
-  .quiz-text-input:focus { border-color: var(--yellow); }
-  .submit-btn {
-    background: var(--red);
-    color: var(--white);
-    border: 2px solid var(--white);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
-    padding: 10px;
-    width: 100%;
-    cursor: pointer;
-  }
-  .submit-btn:active { transform: scale(0.98); }
-
-  /* Feedback */
-  .feedback {
-    font-size: 8px;
-    padding: 6px 10px;
-    border: 2px solid;
-    text-align: center;
-    animation: feedback-in 0.2s ease;
-  }
-  @keyframes feedback-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .feedback.ok { color: var(--green); border-color: var(--green); background: rgba(0,170,0,0.1); }
-  .feedback.err { color: var(--red); border-color: var(--red); background: rgba(209,0,0,0.1); }
-
-  /* Next btn */
-  .next-btn {
-    background: var(--dark-gray);
-    border: 2px solid var(--yellow);
-    color: var(--yellow);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
-    padding: 10px;
-    width: 100%;
-    cursor: pointer;
-    display: none;
-  }
-  .next-btn.visible { display: block; }
-
-  /* ===== SOLD OUT OVERLAY ===== */
-  #sold-out-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.95);
-    z-index: 100;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    padding: 24px;
-  }
-  #sold-out-overlay.active { display: flex; }
-  .sold-out-text {
-    font-size: 28px;
-    color: var(--red);
-    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
-    text-align: center;
-    animation: shake 0.3s ease 3;
-  }
-  @keyframes shake {
-    0%,100%{transform:translateX(0)}
-    25%{transform:translateX(-6px)}
-    75%{transform:translateX(6px)}
-  }
-  .sold-out-sub { font-size: 9px; color: var(--gray); text-align: center; line-height: 2; }
-  .score-display { font-size: 12px; color: var(--yellow); text-align: center; line-height: 2; }
-  .score-label { font-size: 8px; color: var(--gray); }
-
-  /* ===== INITIALS SCREEN ===== */
-  #initials-screen {
-    padding: 20px;
-    gap: 16px;
-    align-items: center;
-    justify-content: center;
-  }
-  .initials-title { font-size: 12px; color: var(--yellow); text-align: center; line-height: 2; }
-  .initials-sub { font-size: 8px; color: var(--gray); text-align: center; line-height: 2; }
-  .initials-input-wrap { display: flex; gap: 8px; justify-content: center; }
-  .initial-box {
-    width: 48px; height: 56px;
-    background: var(--black);
-    border: 3px solid var(--gray);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px;
-    color: var(--white);
-    cursor: pointer;
-  }
-  .initial-box.active { border-color: var(--yellow); }
-  .initial-box.filled { border-color: var(--green); color: var(--green); }
-  .initials-keyboard {
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 4px;
-    width: 100%;
-    max-width: 340px;
-  }
-  .key-btn {
-    background: var(--dark-gray);
-    border: 2px solid #444;
-    color: var(--white);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
-    padding: 8px 0;
-    cursor: pointer;
-    text-align: center;
-  }
-  .key-btn:active { background: #333; transform: scale(0.95); }
-  .key-btn.special { color: var(--yellow); border-color: var(--yellow); }
-  .confirm-btn {
-    background: var(--red);
-    border: 3px solid var(--white);
-    color: var(--white);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    padding: 14px;
-    width: 100%;
-    max-width: 280px;
-    cursor: pointer;
-  }
-  .confirm-btn:disabled { background: #444; border-color: #666; color: #666; cursor: not-allowed; }
-
-  /* ===== RANKING SCREEN ===== */
-  #ranking-screen { padding: 16px; gap: 12px; }
-  .ranking-tabs {
-    display: flex;
-    border: 2px solid #444;
-  }
-  .rank-tab {
-    flex: 1;
-    background: var(--dark-gray);
-    border: none;
-    border-right: 1px solid #444;
-    color: var(--gray);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 7px;
-    padding: 8px 4px;
-    cursor: pointer;
-    text-align: center;
-  }
-  .rank-tab:last-child { border-right: none; }
-  .rank-tab.active { background: var(--red); color: var(--white); }
-
-  .ranking-table { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-  .rank-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    background: var(--dark-gray);
-    border: 1px solid #333;
-  }
-  .rank-row.top3 { border-color: var(--yellow); }
-  .rank-row.empty { opacity: 0.4; }
-  .rank-pos { font-size: 8px; color: var(--yellow); width: 24px; flex-shrink: 0; }
-  .rank-initials { font-size: 11px; color: var(--white); width: 48px; flex-shrink: 0; letter-spacing: 3px; }
-  .rank-score { font-size: 9px; color: var(--yellow); flex: 1; text-align: right; }
-  .rank-label { font-size: 6px; color: var(--gray); text-align: right; }
-
-  /* Red flash overlay */
-  #flash-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(200,0,0,0.6);
-    z-index: 200;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.1s;
-  }
-  #flash-overlay.flash { opacity: 1; }
-
-  /* ===== SCROLLBAR ===== */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #111; }
-  ::-webkit-scrollbar-thumb { background: var(--red); }
+/* FLASH */
+#flash-overlay{position:fixed;inset:0;background:rgba(200,0,0,.6);z-index:200;pointer-events:none;opacity:0;transition:opacity .1s;}
+#flash-overlay.flash{opacity:1;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:#111;}
+::-webkit-scrollbar-thumb{background:var(--red);}
 </style>
 </head>
 <body>
 <div id="flash-overlay"></div>
 <div id="game-container">
 
-  <!-- ===== TITLE SCREEN ===== -->
-  <div id="title-screen" class="screen active">
-    <div class="brand-logo">
-      <span class="brand-name">SUPER ME</span>
-      <span class="brand-sub">EST. DROP CULTURE</span>
-    </div>
-    <canvas class="title-pixel-art" id="title-canvas" width="80" height="80"></canvas>
-    <div class="game-title">
-      <div class="main">SUPER ME</div>
-      <div class="main">CHALLENGE</div>
-      <div class="sub" style="margin-top:8px">PROVE YOU DESERVE CHECKOUT</div>
-    </div>
-    <button class="title-btn pixel-shadow blink" onclick="showScreen('item-select')">▶ START GAME</button>
-    <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('ranking-screen'); loadRanking()">🏆 RANKINGS</button>
+<!-- TITLE -->
+<div id="title-screen" class="screen active">
+  <div class="brand-logo">
+    <span class="brand-name">SUPER ME</span>
+    <span class="brand-sub">EST. DROP CULTURE</span>
   </div>
-
-  <!-- ===== ITEM SELECT ===== -->
-  <div id="item-select" class="screen">
-    <div style="padding:16px; display:flex; flex-direction:column; gap:12px; flex:1;">
-      <div class="screen-header">
-        SELECT ITEM TO PURCHASE
-        <div class="screen-subtitle">CHOOSE WISELY. YOU WILL NOT SUCCEED.</div>
-      </div>
-      <div class="item-cards">
-
-        <div class="item-card easy" onclick="startGame('easy')">
-          <div class="item-tag easy">EASY</div>
-          <div class="item-card-inner">
-            <canvas class="item-pixel" id="item-canvas-easy" width="28" height="28"></canvas>
-            <div class="item-info">
-              <div class="item-name">LOGO DON TEE</div>
-              <div class="item-stats">
-                <div class="stat-row">
-                  <span class="stat-label">HYPE</span>
-                  <div class="stat-bar-wrap">
-                    <div class="stat-pip filled easy"></div>
-                    <div class="stat-pip filled easy"></div>
-                    <div class="stat-pip easy"></div>
-                    <div class="stat-pip easy"></div>
-                    <div class="stat-pip easy"></div>
-                  </div>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">PANIC</span>
-                  <div class="stat-bar-wrap">
-                    <div class="stat-pip filled easy"></div>
-                    <div class="stat-pip easy"></div>
-                    <div class="stat-pip easy"></div>
-                    <div class="stat-pip easy"></div>
-                    <div class="stat-pip easy"></div>
-                  </div>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">TIME</span>
-                  <span style="color:var(--green);font-size:7px;">45 SEC</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card normal" onclick="startGame('normal')">
-          <div class="item-tag normal">NORMAL</div>
-          <div class="item-card-inner">
-            <canvas class="item-pixel" id="item-canvas-normal" width="28" height="28"></canvas>
-            <div class="item-info">
-              <div class="item-name">BOXLOGO HOODIE</div>
-              <div class="item-stats">
-                <div class="stat-row">
-                  <span class="stat-label">HYPE</span>
-                  <div class="stat-bar-wrap">
-                    <div class="stat-pip filled normal"></div>
-                    <div class="stat-pip filled normal"></div>
-                    <div class="stat-pip filled normal"></div>
-                    <div class="stat-pip filled normal"></div>
-                    <div class="stat-pip normal"></div>
-                  </div>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">PANIC</span>
-                  <div class="stat-bar-wrap">
-                    <div class="stat-pip filled normal"></div>
-                    <div class="stat-pip filled normal"></div>
-                    <div class="stat-pip filled normal"></div>
-                    <div class="stat-pip normal"></div>
-                    <div class="stat-pip normal"></div>
-                  </div>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">TIME</span>
-                  <span style="color:var(--yellow);font-size:7px;">30 SEC</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="item-card hard" onclick="startGame('hard')">
-          <div class="item-tag hard">HARD</div>
-          <div class="item-card-inner">
-            <canvas class="item-pixel" id="item-canvas-hard" width="28" height="28"></canvas>
-            <div class="item-info">
-              <div class="item-name">LIMITED COLLAB</div>
-              <div class="item-stats">
-                <div class="stat-row">
-                  <span class="stat-label">HYPE</span>
-                  <div class="stat-bar-wrap">
-                    <div class="stat-pip filled hard"></div>
-                    <div class="stat-pip filled hard"></div>
-                    <div class="stat-pip filled hard"></div>
-                    <div class="stat-pip filled hard"></div>
-                    <div class="stat-pip filled hard"></div>
-                  </div>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">PANIC</span>
-                  <div class="stat-bar-wrap">
-                    <div class="stat-pip filled hard"></div>
-                    <div class="stat-pip filled hard"></div>
-                    <div class="stat-pip filled hard"></div>
-                    <div class="stat-pip filled hard"></div>
-                    <div class="stat-pip filled hard"></div>
-                  </div>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">TIME</span>
-                  <span style="color:var(--red);font-size:7px;">20 SEC</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('title-screen')" style="margin-top:auto;">◀ BACK</button>
-    </div>
+  <canvas class="title-pixel-art" id="title-canvas" width="80" height="80"></canvas>
+  <div class="game-title">
+    <div class="main">SUPER ME</div>
+    <div class="main">CHALLENGE</div>
+    <div class="sub" style="margin-top:8px">PROVE YOU DESERVE CHECKOUT</div>
   </div>
-
-  <!-- ===== GAME SCREEN ===== -->
-  <div id="game-screen" class="screen">
-    <div class="hud">
-      <div class="hud-top">
-        <span class="hud-score">SCORE: <span id="hud-score-val">0</span></span>
-        <span class="hud-target" id="hud-target">TARGET: ---</span>
-      </div>
-      <div class="hud-mid">
-        <canvas class="face-icon" id="face-canvas" width="18" height="18"></canvas>
-        <div class="timer-wrap">
-          <div class="timer-label">CHECKOUT WINDOW</div>
-          <div class="timer-bar-outer">
-            <div class="timer-bar-inner ok" id="timer-bar"></div>
-          </div>
-          <div class="timer-text" id="timer-text">45.0s</div>
-        </div>
-      </div>
-    </div>
-    <div class="game-main">
-      <div class="char-area" id="char-area">
-        <canvas class="char-canvas" id="char-canvas" width="50" height="50"></canvas>
-      </div>
-      <div class="quiz-area" id="quiz-area">
-        <!-- quiz injected here -->
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== SOLD OUT OVERLAY ===== -->
-  <div id="sold-out-overlay">
-    <div class="sold-out-text">SOLD OUT</div>
-    <div class="sold-out-sub">TOO SLOW.<br>ANOTHER CUSTOMER<br>COMPLETED CHECKOUT.</div>
-    <div class="score-display">
-      <div class="score-label">VERIFICATIONS CLEARED</div>
-      <div id="final-score-val" style="font-size:24px; color:var(--yellow); margin-top:8px;">0</div>
-    </div>
-    <button class="title-btn pixel-shadow" id="rank-in-btn" onclick="showInitials()">★ RANK IN</button>
-    <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('item-select')">↺ RETRY</button>
-    <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('title-screen')">⌂ TITLE</button>
-  </div>
-
-  <!-- ===== INITIALS SCREEN ===== -->
-  <div id="initials-screen" class="screen">
-    <div class="initials-title">RANK IN!</div>
-    <div class="initials-sub">ENTER YOUR INITIALS</div>
-    <div class="initials-input-wrap">
-      <div class="initial-box active" id="ib0">_</div>
-      <div class="initial-box" id="ib1">_</div>
-      <div class="initial-box" id="ib2">_</div>
-    </div>
-    <div class="initials-keyboard" id="initials-keyboard"></div>
-    <button class="confirm-btn" id="confirm-btn" onclick="submitInitials()" disabled>CONFIRM</button>
-    <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('ranking-screen'); loadRanking()">SKIP → VIEW RANKINGS</button>
-  </div>
-
-  <!-- ===== RANKING SCREEN ===== -->
-  <div id="ranking-screen" class="screen">
-    <div style="padding:16px; display:flex; flex-direction:column; gap:12px; flex:1;">
-      <div class="screen-header">
-        HALL OF FAILED PURCHASES
-        <div class="screen-subtitle">TOP VERIFICATION CLEARERS</div>
-      </div>
-      <div class="ranking-tabs">
-        <button class="rank-tab active" onclick="switchRankTab('easy', this)">LOGO DON<br>TEE</button>
-        <button class="rank-tab" onclick="switchRankTab('normal', this)">BOX LOGO<br>HOODIE</button>
-        <button class="rank-tab" onclick="switchRankTab('hard', this)">LIMITED<br>COLLAB</button>
-      </div>
-      <div class="ranking-table" id="ranking-table"></div>
-      <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('title-screen')">◀ BACK TO TITLE</button>
-    </div>
-  </div>
-
+  <button class="title-btn blink" onclick="showScreen('item-select')">&#9654; START GAME</button>
+  <button class="title-btn secondary" onclick="showScreen('ranking-screen');loadRanking()">&#9733; RANKINGS</button>
 </div>
 
+<!-- ITEM SELECT -->
+<div id="item-select" class="screen">
+  <div style="padding:16px;display:flex;flex-direction:column;gap:12px;flex:1;">
+    <div class="screen-header">SELECT ITEM TO PURCHASE<div class="screen-subtitle">CHOOSE WISELY. YOU WILL NOT SUCCEED.</div></div>
+    <div class="item-cards">
+      <div class="item-card easy" onclick="startGame('easy')">
+        <div class="item-tag easy">EASY</div>
+        <div class="item-card-inner">
+          <canvas class="item-pixel" id="ic-easy" width="28" height="28"></canvas>
+          <div class="item-info">
+            <div class="item-name">LOGO DON TEE</div>
+            <div class="item-stats">
+              <div class="stat-row"><span class="stat-label">HYPE</span><div class="stat-bar-wrap"><div class="stat-pip filled easy"></div><div class="stat-pip filled easy"></div><div class="stat-pip easy"></div><div class="stat-pip easy"></div><div class="stat-pip easy"></div></div></div>
+              <div class="stat-row"><span class="stat-label">PANIC</span><div class="stat-bar-wrap"><div class="stat-pip filled easy"></div><div class="stat-pip easy"></div><div class="stat-pip easy"></div><div class="stat-pip easy"></div><div class="stat-pip easy"></div></div></div>
+              <div class="stat-row"><span class="stat-label">TIME</span><span style="color:var(--green);font-size:7px">45 SEC</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item-card normal" onclick="startGame('normal')">
+        <div class="item-tag normal">NORMAL</div>
+        <div class="item-card-inner">
+          <canvas class="item-pixel" id="ic-normal" width="28" height="28"></canvas>
+          <div class="item-info">
+            <div class="item-name">BOXLOGO HOODIE</div>
+            <div class="item-stats">
+              <div class="stat-row"><span class="stat-label">HYPE</span><div class="stat-bar-wrap"><div class="stat-pip filled normal"></div><div class="stat-pip filled normal"></div><div class="stat-pip filled normal"></div><div class="stat-pip filled normal"></div><div class="stat-pip normal"></div></div></div>
+              <div class="stat-row"><span class="stat-label">PANIC</span><div class="stat-bar-wrap"><div class="stat-pip filled normal"></div><div class="stat-pip filled normal"></div><div class="stat-pip filled normal"></div><div class="stat-pip normal"></div><div class="stat-pip normal"></div></div></div>
+              <div class="stat-row"><span class="stat-label">TIME</span><span style="color:var(--yellow);font-size:7px">30 SEC</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item-card hard" onclick="startGame('hard')">
+        <div class="item-tag hard">HARD</div>
+        <div class="item-card-inner">
+          <canvas class="item-pixel" id="ic-hard" width="28" height="28"></canvas>
+          <div class="item-info">
+            <div class="item-name">LIMITED COLLAB</div>
+            <div class="item-stats">
+              <div class="stat-row"><span class="stat-label">HYPE</span><div class="stat-bar-wrap"><div class="stat-pip filled hard"></div><div class="stat-pip filled hard"></div><div class="stat-pip filled hard"></div><div class="stat-pip filled hard"></div><div class="stat-pip filled hard"></div></div></div>
+              <div class="stat-row"><span class="stat-label">PANIC</span><div class="stat-bar-wrap"><div class="stat-pip filled hard"></div><div class="stat-pip filled hard"></div><div class="stat-pip filled hard"></div><div class="stat-pip filled hard"></div><div class="stat-pip filled hard"></div></div></div>
+              <div class="stat-row"><span class="stat-label">TIME</span><span style="color:var(--red);font-size:7px">20 SEC</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="title-btn secondary" onclick="showScreen('title-screen')" style="margin-top:auto">&#9664; BACK</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen" class="screen">
+  <div class="hud">
+    <div class="hud-top">
+      <span class="hud-score">SCORE: <span id="hud-score-val">0</span></span>
+      <span class="hud-target" id="hud-target">TARGET: ---</span>
+    </div>
+    <div class="hud-mid">
+      <canvas class="face-icon" id="face-canvas" width="18" height="18"></canvas>
+      <div class="timer-wrap">
+        <div class="timer-label">CHECKOUT WINDOW</div>
+        <div class="timer-bar-outer"><div class="timer-bar-inner ok" id="timer-bar"></div></div>
+        <div class="timer-text" id="timer-text">45.0s</div>
+      </div>
+    </div>
+  </div>
+  <div class="game-main">
+    <div class="char-area" id="char-area">
+      <canvas class="char-canvas" id="char-canvas" width="50" height="50"></canvas>
+    </div>
+    <div class="quiz-area" id="quiz-area"></div>
+  </div>
+</div>
+
+<!-- SOLD OUT -->
+<div id="sold-out-overlay">
+  <div class="sold-out-text">SOLD OUT</div>
+  <div class="sold-out-sub">TOO SLOW.<br>ANOTHER CUSTOMER<br>COMPLETED CHECKOUT.</div>
+  <div class="score-display">
+    <div class="score-label">VERIFICATIONS CLEARED</div>
+    <div id="final-score-val" style="font-size:24px;color:var(--yellow);margin-top:8px">0</div>
+  </div>
+  <button class="title-btn" id="rank-in-btn" onclick="showInitials()">&#9733; RANK IN</button>
+  <button class="title-btn secondary" onclick="showScreen('item-select')">&#8635; RETRY</button>
+  <button class="title-btn secondary" onclick="showScreen('title-screen')">&#8962; TITLE</button>
+</div>
+
+<!-- INITIALS -->
+<div id="initials-screen" class="screen">
+  <div class="initials-title">RANK IN!</div>
+  <div class="initials-sub">ENTER YOUR INITIALS</div>
+  <div class="initials-input-wrap">
+    <div class="initial-box active" id="ib0">_</div>
+    <div class="initial-box" id="ib1">_</div>
+    <div class="initial-box" id="ib2">_</div>
+  </div>
+  <div class="initials-keyboard" id="initials-keyboard"></div>
+  <button class="confirm-btn" id="confirm-btn" onclick="submitInitials()" disabled>CONFIRM</button>
+  <button class="title-btn secondary" onclick="showScreen('ranking-screen');loadRanking()">SKIP &#8594; VIEW RANKINGS</button>
+</div>
+
+<!-- RANKING -->
+<div id="ranking-screen" class="screen">
+  <div class="inner">
+    <div class="screen-header">HALL OF FAILED PURCHASES<div class="screen-subtitle">TOP VERIFICATION CLEARERS</div></div>
+    <div class="ranking-tabs">
+      <button class="rank-tab active" onclick="switchRankTab('easy',this)">LOGO DON<br>TEE</button>
+      <button class="rank-tab" onclick="switchRankTab('normal',this)">BOX LOGO<br>HOODIE</button>
+      <button class="rank-tab" onclick="switchRankTab('hard',this)">LIMITED<br>COLLAB</button>
+    </div>
+    <div class="ranking-table" id="ranking-table"></div>
+    <button class="title-btn secondary" onclick="showScreen('title-screen')">&#9664; BACK TO TITLE</button>
+  </div>
+</div>
+
+</div>
 <script>
-// ===== PIXEL ART DRAWING =====
-function drawPixelArt(canvas, pixels, palette, scale) {
-  const ctx = canvas.getContext('2d');
-  const s = scale || Math.floor(canvas.width / pixels[0].length);
-  ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  pixels.forEach((row, y) => {
-    row.forEach((c, x) => {
-      if (c !== 0) {
-        ctx.fillStyle = palette[c];
-        ctx.fillRect(x * s, y * s, s, s);
-      }
-    });
-  });
+// ===== PIXEL ART =====
+function px(canvas,pixels,palette,s){
+  var ctx=canvas.getContext('2d');
+  s=s||Math.floor(canvas.width/pixels[0].length);
+  ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pixels.forEach(function(row,y){row.forEach(function(c,x){if(c!==0){ctx.fillStyle=palette[c];ctx.fillRect(x*s,y*s,s,s);}});});
 }
+var P={R:'#D10000',DR:'#8B0000',W:'#F0F0F0',B:'#0A0A0A',G:'#888',DG:'#222',YL:'#FFD700',GR:'#2a8a2a'};
 
-const P = {
-  R: '#D10000', DR: '#8B0000', W: '#F0F0F0', B: '#0A0A0A',
-  G: '#888888', DG: '#222222', SK: '#D4956A', DSK: '#A0704A',
-  BL: '#1a1a2e', BK: '#000000', YL: '#FFD700', GR: '#2a8a2a',
-  LG: '#cccccc', NV: '#1a1a4a', RD: '#cc3333',
-};
-
-// Title character: バラクラバ巨漢 (big pixel art)
-function drawTitleChar(canvas) {
-  const pal = {1:P.BK,2:P.G,3:P.W,4:P.YL,5:P.R,6:P.DG,7:P.SK,8:P.GR,9:P.LG};
-  const px = [
-    [0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0],
-    [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
-    [0,1,1,2,2,1,1,2,2,1,1,0,0,0,0,0],
-    [0,1,1,2,2,1,1,2,2,1,1,0,0,0,0,0],
-    [0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],
-    [0,0,1,1,3,3,3,3,1,1,0,0,0,0,0,0],
-    [0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0],
-    [0,0,5,5,5,5,5,5,5,5,0,0,0,0,0,0],
-    [0,5,5,5,5,5,5,5,5,5,5,0,0,0,0,0],
-    [5,5,5,5,5,5,5,5,5,5,5,5,0,0,0,0],
-    [5,5,5,5,3,5,5,5,3,5,5,5,0,0,0,0],
-    [5,5,5,5,5,5,5,5,5,5,5,5,0,0,0,0],
-    [0,5,5,5,5,5,5,5,5,5,5,0,0,0,0,0],
-    [0,0,6,6,6,6,6,6,6,6,0,0,0,0,0,0],
-    [0,6,6,6,6,6,6,6,6,6,6,0,0,0,0,0],
-    [6,6,6,0,6,6,6,6,0,6,6,6,0,0,0,0],
-  ];
-  drawPixelArt(canvas, px, pal, 5);
-}
-
-// Item: T-shirt
-function drawTee(canvas) {
-  const pal = {1:'#ffffff',2:'#cccccc',3:'#aaaaaa',4:'#D10000',5:'#000000'};
-  const px = [
-    [0,1,1,2,2,2,2,2,2,1,1,0,0,0],
-    [1,1,2,2,2,2,2,2,2,2,1,1,0,0],
-    [2,2,2,2,2,2,2,2,2,2,2,2,0,0],
-    [0,3,3,2,2,2,2,2,2,3,3,0,0,0],
-    [0,0,3,2,2,2,2,2,2,3,0,0,0,0],
-    [0,0,3,2,4,4,4,4,2,3,0,0,0,0],
-    [0,0,3,2,4,5,5,4,2,3,0,0,0,0],
-    [0,0,3,2,4,4,4,4,2,3,0,0,0,0],
-    [0,0,3,2,2,2,2,2,2,3,0,0,0,0],
-    [0,0,3,2,2,2,2,2,2,3,0,0,0,0],
-    [0,0,3,3,3,3,3,3,3,3,0,0,0,0],
-  ];
-  drawPixelArt(canvas, px, pal, 2);
-}
-
-// Item: Hoodie
-function drawHoodie(canvas) {
-  const pal = {1:'#D10000',2:'#8B0000',3:'#ff4444',4:'#ffffff',5:'#000000',6:'#cc0000'};
-  const px = [
-    [0,1,1,2,2,1,1,1,1,2,2,1,1,0],
-    [1,1,2,2,2,1,1,1,1,2,2,2,1,1],
-    [1,1,2,1,1,1,1,1,1,1,1,2,1,1],
-    [0,2,1,1,1,1,1,1,1,1,1,1,2,0],
-    [0,0,2,1,1,1,1,1,1,1,1,2,0,0],
-    [0,0,2,1,4,4,4,4,4,4,1,2,0,0],
-    [0,0,2,1,4,5,5,5,5,4,1,2,0,0],
-    [0,0,2,1,4,5,4,4,5,4,1,2,0,0],
-    [0,0,2,1,4,4,4,4,4,4,1,2,0,0],
-    [0,0,2,1,1,1,1,1,1,1,1,2,0,0],
-    [0,0,2,2,2,2,2,2,2,2,2,2,0,0],
-  ];
-  drawPixelArt(canvas, px, pal, 2);
-}
-
-// Item: Collab (star/special)
-function drawCollab(canvas) {
-  const pal = {1:'#1a1a2e',2:'#4a4a8e',3:'#FFD700',4:'#ffffff',5:'#D10000',6:'#ff8800'};
-  const px = [
-    [0,0,0,1,1,1,1,1,1,1,1,0,0,0],
-    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
-    [0,1,1,2,2,3,2,2,3,2,2,1,1,0],
-    [1,1,2,2,3,3,2,2,3,3,2,2,1,1],
-    [1,1,2,2,2,2,3,3,2,2,2,2,1,1],
-    [1,1,2,5,5,3,3,3,3,5,5,2,1,1],
-    [1,1,2,5,3,3,4,4,3,3,5,2,1,1],
-    [1,1,2,5,5,3,3,3,3,5,5,2,1,1],
-    [1,1,2,2,2,2,3,3,2,2,2,2,1,1],
-    [0,1,1,2,2,2,2,2,2,2,2,1,1,0],
-    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
-  ];
-  drawPixelArt(canvas, px, pal, 2);
-}
-
-// Face sprites
-function drawFace(canvas, state) {
-  // state: 0=calm, 1=worry, 2=sweat, 3=panic
-  const pal = {1:P.BK,2:P.G,3:P.W,4:P.YL,5:P.R,6:'#4488ff'};
-  const faces = [
-    // calm
-    [[0,1,1,1,1,1,0],[1,1,2,1,2,1,1],[1,1,1,1,1,1,1],[1,2,1,1,1,2,1],[1,1,3,3,3,1,1],[0,1,1,1,1,1,0]],
-    // worry
-    [[0,1,1,1,1,1,0],[1,2,1,2,1,2,1],[1,1,2,1,2,1,1],[1,1,1,1,1,1,1],[1,1,3,1,3,1,1],[0,1,3,3,3,1,0]],
-    // sweat
-    [[6,1,1,1,1,1,0],[1,2,1,2,1,2,6],[1,1,2,1,2,1,1],[1,1,1,1,1,1,1],[1,1,1,3,1,1,1],[0,1,3,1,3,1,0]],
-    // panic
-    [[6,1,1,1,1,1,6],[1,2,2,2,2,2,1],[1,1,1,1,1,1,6],[1,5,1,1,1,5,1],[1,1,3,3,3,1,1],[0,5,5,5,5,5,0]],
-  ];
-  drawPixelArt(canvas, faces[state], pal, Math.floor(canvas.width/7));
-}
-
-// Main character (full body, different sweat levels)
-function drawChar(canvas, state) {
-  const pal = {1:P.BK,2:P.G,3:P.W,4:P.R,5:P.SK,6:P.DG,7:'#4488ff',8:P.YL,9:P.GR};
-  // state 0-3 affects sweat particles (drawn separately)
-  const px = [
+function drawTitleChar(canvas){
+  var pal={1:'#000',2:'#888',3:'#fff',4:'#FFD700',5:'#D10000'};
+  var d=[
     [0,0,1,1,1,1,1,1,0,0],
     [0,1,1,2,1,1,2,1,1,0],
     [0,1,1,1,1,1,1,1,1,0],
     [0,1,2,1,3,3,1,2,1,0],
     [0,0,1,1,1,1,1,1,0,0],
-    [0,4,4,4,4,4,4,4,4,0],
-    [4,4,4,4,4,4,4,4,4,4],
-    [4,4,3,4,4,4,4,3,4,4],
-    [4,4,4,4,4,4,4,4,4,4],
-    [0,4,4,4,4,4,4,4,4,0],
-    [0,6,6,6,6,6,6,6,6,0],
-    [0,6,6,0,6,6,6,0,6,0],
-    [0,6,0,0,6,6,0,0,6,0],
+    [0,5,5,5,5,5,5,5,5,0],
+    [5,5,5,5,5,5,5,5,5,5],
+    [5,5,3,5,5,5,5,3,5,5],
+    [5,5,5,5,5,5,5,5,5,5],
+    [0,5,5,5,5,5,5,5,5,0]
   ];
-  // Lean forward when panicking
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (state >= 2) {
-    ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2);
-    ctx.rotate(state * 0.06);
-    ctx.translate(-canvas.width/2, -canvas.height/2);
-  }
-  drawPixelArt(canvas, px, pal, Math.floor(canvas.width/10));
-  if (state >= 2) ctx.restore();
+  px(canvas,d,pal,8);
+}
+function drawTee(canvas){
+  var pal={1:'#ddd',2:'#aaa',3:'#D10000',4:'#000'};
+  var d=[
+    [0,1,1,2,2,2,2,1,1,0],
+    [1,1,2,2,2,2,2,2,1,1],
+    [2,2,2,2,2,2,2,2,2,2],
+    [0,2,2,3,3,3,3,2,2,0],
+    [0,2,2,3,4,4,3,2,2,0],
+    [0,2,2,3,3,3,3,2,2,0],
+    [0,2,2,2,2,2,2,2,2,0],
+    [0,2,2,2,2,2,2,2,2,0]
+  ];
+  px(canvas,d,pal,Math.floor(canvas.width/10));
+}
+function drawHoodie(canvas){
+  var pal={1:'#D10000',2:'#8B0000',3:'#fff',4:'#000'};
+  var d=[
+    [0,1,1,2,1,1,1,2,1,1,0],
+    [1,1,2,2,1,1,1,2,2,1,1],
+    [0,2,1,1,1,1,1,1,1,2,0],
+    [0,2,1,3,3,3,3,3,1,2,0],
+    [0,2,1,3,4,4,4,3,1,2,0],
+    [0,2,1,3,3,3,3,3,1,2,0],
+    [0,2,1,1,1,1,1,1,1,2,0],
+    [0,2,2,2,2,2,2,2,2,2,0]
+  ];
+  px(canvas,d,pal,Math.floor(canvas.width/11));
+}
+function drawCollab(canvas){
+  var pal={1:'#1a1a2e',2:'#4a4a8e',3:'#FFD700',4:'#D10000'};
+  var d=[
+    [1,1,1,1,1,1,1,1,1,1],
+    [1,2,2,1,3,1,3,1,2,1],
+    [1,2,1,3,3,3,3,3,1,2],
+    [1,1,3,3,4,4,3,3,1,1],
+    [1,1,1,4,4,4,4,1,1,1],
+    [1,1,3,3,4,4,3,3,1,1],
+    [1,2,1,3,3,3,3,3,1,2],
+    [1,1,2,2,1,1,1,2,2,1]
+  ];
+  px(canvas,d,pal,Math.floor(canvas.width/10));
+}
+function drawFace(canvas,state){
+  var pal={1:'#000',2:'#888',3:'#fff',4:'#4488ff',5:'#D10000'};
+  var faces=[
+    [[0,1,1,1,1,1,0],[1,2,1,2,1,2,1],[1,1,1,1,1,1,1],[1,1,3,3,3,1,1],[0,1,1,1,1,1,0]],
+    [[0,1,1,1,1,1,0],[1,2,2,1,2,2,1],[1,1,1,1,1,1,1],[1,1,3,1,3,1,1],[0,1,3,3,3,1,0]],
+    [[4,1,1,1,1,1,0],[1,2,2,1,2,2,4],[1,1,1,1,1,1,1],[1,1,1,3,1,1,1],[0,1,3,1,3,1,0]],
+    [[4,1,1,1,1,1,4],[1,5,5,5,5,5,1],[1,1,1,1,1,1,4],[1,3,3,3,3,3,1],[0,5,5,5,5,5,0]]
+  ];
+  px(canvas,faces[state],pal,Math.floor(canvas.width/7));
+}
+function drawChar(canvas,state){
+  var pal={1:'#000',2:'#888',3:'#fff',4:'#D10000',5:'#222'};
+  var d=[
+    [0,1,1,1,1,1,1,1,0],
+    [0,1,2,1,1,2,1,1,0],
+    [0,1,1,1,1,1,1,1,0],
+    [0,1,3,1,1,1,3,1,0],
+    [0,0,1,1,1,1,1,0,0],
+    [0,4,4,4,4,4,4,4,0],
+    [4,4,4,4,4,4,4,4,4],
+    [4,4,3,4,4,4,3,4,4],
+    [4,4,4,4,4,4,4,4,4],
+    [0,5,5,5,5,5,5,5,0],
+    [0,5,5,0,5,5,0,5,0]
+  ];
+  var ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(state>=2){ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(state*0.06);ctx.translate(-canvas.width/2,-canvas.height/2);}
+  px(canvas,d,pal,Math.floor(canvas.width/9));
+  if(state>=2)ctx.restore();
 }
 
-// ===== GAME STATE =====
-let gameState = {
-  difficulty: 'easy',
-  timeLeft: 45,
-  maxTime: 45,
-  score: 0,
-  timerInterval: null,
-  currentQ: 0,
-  answered: false,
-  lastScore: 0,
-  lastDiff: 'easy',
-  charState: 0,
-  sweatInterval: null,
-};
+// ===== STATE =====
+var G={diff:'easy',timeLeft:45,maxTime:45,score:0,timer:null,charState:0,sweatTimer:null,answered:false,currentQ:null,lastScore:0,lastDiff:'easy'};
+var DIFF={easy:45,normal:30,hard:20};
+var DNAMES={easy:'LOGO DON TEE',normal:'BOXLOGO HOODIE',hard:'LIMITED COLLAB'};
 
-const DIFF = { easy: 45, normal: 30, hard: 20 };
-const DIFF_NAMES = { easy: 'LOGO DON TEE', normal: 'BOXLOGO HOODIE', hard: 'LIMITED COLLAB' };
-
-// ===== 15 QUESTIONS POOL =====
-const QUESTIONS = [
-  {
-    type: 'checkbox',
-    prompt: 'STEP 1 OF 1:\nCONFIRM YOU ARE NOT A RESELLER',
-    label: 'I AM NOT A RESELLER',
-    answer: true,
-    feedback: 'VERIFICATION REQUIRED. PLEASE COMPLETE ADDITIONAL STEPS.',
-  },
-  {
-    type: 'grid',
-    prompt: 'SELECT ALL SQUARES\nCONTAINING BOX LOGOS',
-    cells: ['🔴','⬛','🔴','🔲','🔴','⬜','🔴','🔲','🟥'],
-    correct: [0,2,4,6],
-    feedback_ok: 'CORRECT. ONE MORE STEP REQUIRED.',
-    feedback_err: 'INCORRECT. TRY AGAIN.',
-  },
-  {
-    type: 'choice',
-    prompt: 'CHOOSE THE CUSTOMER\nMOST LIKELY TO PANIC BUY',
-    choices: ['A NORMAL PERSON','A HYPE BEAST','A LARGE MAN IN A BALACLAVA','A PATIENT ADULT'],
-    correct: 2,
-  },
-  {
-    type: 'text',
-    prompt: 'TYPE THE WORD THAT APPEARED\nBEFORE IT DISAPPEARED:',
-    flash: 'CHECKOUT',
-    answer: 'CHECKOUT',
-  },
-  {
-    type: 'choice',
-    prompt: 'WHAT IS 2 + 3 CARTS?',
-    choices: ['3 CARTS','5 CARTS','TOO MANY','SOLD OUT'],
-    correct: 1,
-  },
-  {
-    type: 'choice',
-    prompt: 'WHICH ITEM HAS THE WORST\nRESALE ETHICS?',
-    choices: ['A BRICK','LOGO DON TEE','RANDOM CHAIR','LIMITED COLLAB DROP'],
-    correct: 3,
-  },
-  {
-    type: 'text',
-    prompt: 'RETYPE IN ALL CAPS:\nNO BACKDOORS',
-    answer: 'NO BACKDOORS',
-  },
-  {
-    type: 'grid',
-    prompt: 'SELECT ALL SQUARES\nWITH HUMAN CUSTOMERS',
-    cells: ['🤖','👤','🤖','👤','🤖','👤','🤖','👤','🤖'],
-    correct: [1,3,5,7],
-    feedback_ok: 'SUSPICIOUS ACTIVITY DETECTED. ONE MORE STEP.',
-    feedback_err: 'BOTS DETECTED. RETRY.',
-  },
-  {
-    type: 'choice',
-    prompt: 'HOW LONG HAVE YOU BEEN\nWAITING IN QUEUE?',
-    choices: ['5 MINUTES','30 MINUTES','3 HOURS','SINCE BIRTH'],
-    correct: 3,
-  },
-  {
-    type: 'checkbox',
-    prompt: 'CONFIRM YOUR INTENT:',
-    label: 'I UNDERSTAND I WILL PROBABLY FAIL',
-    answer: true,
-    feedback: 'NOTED. PROCEED TO NEXT VERIFICATION.',
-  },
-  {
-    type: 'choice',
-    prompt: 'VERIFY YOUR HUMAN HYPE.\nSELECT THE CORRECT DROP DAY:',
-    choices: ['MONDAY','THURSDAY','SUNDAY','FRIDAY'],
-    correct: 2,
-  },
-  {
-    type: 'text',
-    prompt: 'ENTER THE SECRET PHRASE\nTO PROVE HUMANITY:\nSUPER ME IS SOLD OUT',
-    answer: 'SUPER ME IS SOLD OUT',
-  },
-  {
-    type: 'grid',
-    prompt: 'SELECT ALL SQUARES\nSHOWING CHECKOUT BUTTONS',
-    cells: ['🛒','❌','🛒','❌','🛒','❌','❌','🛒','❌'],
-    correct: [0,2,4,7],
-    feedback_ok: 'ALMOST. ONE FINAL STEP.',
-    feedback_err: 'WRONG. THE CART WEEPS.',
-  },
-  {
-    type: 'choice',
-    prompt: 'WHAT IS THE RESALE VALUE\nOF YOUR DIGNITY AFTER\nFAILING THIS CHECKOUT?',
-    choices: ['$0','$0 (FIRM)','NEGATIVE','PRICELESS'],
-    correct: 2,
-  },
-  {
-    type: 'text',
-    prompt: 'ONE LAST STEP.\nTYPE YOUR RESOLVE:',
-    flash: 'ADD TO CART',
-    answer: 'ADD TO CART',
-  },
+// ===== QUESTIONS =====
+var QS=[
+  {type:'check',prompt:'STEP 1 OF 1:\nCONFIRM YOU ARE NOT A RESELLER',label:'I AM NOT A RESELLER',fb:'VERIFICATION REQUIRED. PLEASE COMPLETE ADDITIONAL STEPS.'},
+  {type:'grid',prompt:'SELECT ALL SQUARES\nCONTAINING BOX LOGOS',cells:['[R]','[ ]','[R]','[_]','[R]','[ ]','[R]','[_]','[X]'],correct:[0,2,4,6],fbok:'CORRECT. ONE MORE STEP REQUIRED.',fberr:'INCORRECT. TRY AGAIN.'},
+  {type:'choice',prompt:'CHOOSE THE CUSTOMER\nMOST LIKELY TO PANIC BUY',choices:['A NORMAL PERSON','A HYPE BEAST','A LARGE MAN IN A BALACLAVA','A PATIENT ADULT'],correct:2},
+  {type:'text',prompt:'TYPE THE WORD THAT APPEARED\nBEFORE IT DISAPPEARED:',flash:'CHECKOUT',answer:'CHECKOUT'},
+  {type:'choice',prompt:'WHAT IS 2 + 3 CARTS?',choices:['3 CARTS','5 CARTS','TOO MANY','SOLD OUT'],correct:1},
+  {type:'choice',prompt:'WHICH ITEM HAS THE WORST\nRESALE ETHICS?',choices:['A BRICK','LOGO DON TEE','RANDOM CHAIR','LIMITED COLLAB DROP'],correct:3},
+  {type:'text',prompt:'RETYPE IN ALL CAPS:\nNO BACKDOORS',answer:'NO BACKDOORS'},
+  {type:'grid',prompt:'SELECT ALL SQUARES\nWITH HUMAN CUSTOMERS',cells:['[BOT]','[YOU]','[BOT]','[YOU]','[BOT]','[YOU]','[BOT]','[YOU]','[BOT]'],correct:[1,3,5,7],fbok:'SUSPICIOUS ACTIVITY DETECTED.',fberr:'BOTS DETECTED. RETRY.'},
+  {type:'choice',prompt:'HOW LONG HAVE YOU BEEN\nWAITING IN QUEUE?',choices:['5 MINUTES','30 MINUTES','3 HOURS','SINCE BIRTH'],correct:3},
+  {type:'check',prompt:'CONFIRM YOUR INTENT:',label:'I UNDERSTAND I WILL PROBABLY FAIL',fb:'NOTED. PROCEED TO NEXT VERIFICATION.'},
+  {type:'choice',prompt:'VERIFY YOUR HUMAN HYPE.\nSELECT THE CORRECT DROP DAY:',choices:['MONDAY','THURSDAY','SUNDAY','FRIDAY'],correct:2},
+  {type:'text',prompt:'ENTER THE SECRET PHRASE:\nSUPER ME IS SOLD OUT',answer:'SUPER ME IS SOLD OUT'},
+  {type:'grid',prompt:'SELECT ALL SQUARES\nSHOWING CHECKOUT BUTTONS',cells:['[BUY]','[NO]','[BUY]','[NO]','[BUY]','[NO]','[NO]','[BUY]','[NO]'],correct:[0,2,4,7],fbok:'ALMOST. ONE FINAL STEP.',fberr:'WRONG. THE CART WEEPS.'},
+  {type:'choice',prompt:'WHAT IS THE RESALE VALUE\nOF YOUR DIGNITY?',choices:['$0','$0 (FIRM)','NEGATIVE','PRICELESS'],correct:2},
+  {type:'text',prompt:'ONE LAST STEP.\nTYPE YOUR RESOLVE:',flash:'ADD TO CART',answer:'ADD TO CART'}
 ];
+var shuffled=[],qIdx=0,selCells=new Set();
+function shuffle(){shuffled=QS.slice().sort(function(){return Math.random()-.5;});qIdx=0;}
+function nextQ(){var q=shuffled[qIdx%shuffled.length];qIdx++;if(qIdx%shuffled.length===0)shuffled.sort(function(){return Math.random()-.5;});return q;}
 
-let shuffledQ = [];
-let qIndex = 0;
-
-function shuffleQuestions() {
-  shuffledQ = [...QUESTIONS].sort(() => Math.random() - 0.5);
-  qIndex = 0;
-}
-
-// ===== SCREEN MANAGEMENT =====
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+// ===== SCREEN =====
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
   document.getElementById('sold-out-overlay').classList.remove('active');
 }
 
-// ===== START GAME =====
-function startGame(diff) {
-  gameState.difficulty = diff;
-  gameState.timeLeft = DIFF[diff];
-  gameState.maxTime = DIFF[diff];
-  gameState.score = 0;
-  gameState.currentQ = 0;
-  gameState.charState = 0;
-  shuffleQuestions();
-
-  document.getElementById('hud-target').textContent = 'TARGET: ' + DIFF_NAMES[diff];
-  document.getElementById('hud-score-val').textContent = '0';
+// ===== GAME =====
+function startGame(diff){
+  G.diff=diff;G.timeLeft=DIFF[diff];G.maxTime=DIFF[diff];G.score=0;G.charState=0;
+  shuffle();
+  document.getElementById('hud-target').textContent='TARGET: '+DNAMES[diff];
+  document.getElementById('hud-score-val').textContent='0';
   updateTimer();
   showScreen('game-screen');
-
-  if (gameState.timerInterval) clearInterval(gameState.timerInterval);
-  if (gameState.sweatInterval) clearInterval(gameState.sweatInterval);
-
-  gameState.timerInterval = setInterval(tickTimer, 100);
-  gameState.sweatInterval = setInterval(maybeSweat, 800);
-
-  renderQuestion();
-  drawChar(document.getElementById('char-canvas'), 0);
-  drawFace(document.getElementById('face-canvas'), 0);
+  clearInterval(G.timer);clearInterval(G.sweatTimer);
+  G.timer=setInterval(tick,100);
+  G.sweatTimer=setInterval(maybeSweat,800);
+  renderQ();
+  drawChar(document.getElementById('char-canvas'),0);
+  drawFace(document.getElementById('face-canvas'),0);
 }
-
-function tickTimer() {
-  gameState.timeLeft -= 0.1;
-  if (gameState.timeLeft <= 0) {
-    gameState.timeLeft = 0;
-    clearInterval(gameState.timerInterval);
-    clearInterval(gameState.sweatInterval);
-    updateTimer();
-    triggerSoldOut();
-    return;
-  }
+function tick(){
+  G.timeLeft-=0.1;
+  if(G.timeLeft<=0){G.timeLeft=0;clearInterval(G.timer);clearInterval(G.sweatTimer);updateTimer();soldOut();return;}
   updateTimer();
-  const pct = gameState.timeLeft / gameState.maxTime;
-  let newCharState = 0;
-  if (pct < 0.15) newCharState = 3;
-  else if (pct < 0.4) newCharState = 2;
-  else if (pct < 0.7) newCharState = 1;
-  if (newCharState !== gameState.charState) {
-    gameState.charState = newCharState;
-    drawChar(document.getElementById('char-canvas'), newCharState);
-    drawFace(document.getElementById('face-canvas'), newCharState);
+  var p=G.timeLeft/G.maxTime;
+  var s=p<0.15?3:p<0.4?2:p<0.7?1:0;
+  if(s!==G.charState){G.charState=s;drawChar(document.getElementById('char-canvas'),s);drawFace(document.getElementById('face-canvas'),s);}
+}
+function updateTimer(){
+  var p=G.timeLeft/G.maxTime;
+  var bar=document.getElementById('timer-bar');
+  bar.style.width=(p*100)+'%';
+  bar.className='timer-bar-inner'+(p>0.5?' ok':p>0.25?' warn':'');
+  document.getElementById('timer-text').textContent=G.timeLeft.toFixed(1)+'s';
+}
+function maybeSweat(){
+  if(!G.charState)return;
+  var a=document.getElementById('char-area');
+  var d=document.createElement('div');
+  d.className='sweat-particle';
+  d.textContent=G.charState>=3?'😭':'💧';
+  d.style.left=(20+Math.random()*60)+'%';
+  d.style.top=(10+Math.random()*40)+'%';
+  a.appendChild(d);
+  setTimeout(function(){d.remove();},1000);
+}
+
+// ===== RENDER QUESTION =====
+function renderQ(){
+  var q=nextQ();G.currentQ=q;G.answered=false;selCells.clear();
+  var num=G.score+1;
+  var prompt=q.prompt.split('\n').join('<br>');
+  var h='<div class="quiz-header"><span class="quiz-label">PURCHASE VERIFICATION</span><span class="quiz-num">#'+num+'</span></div>';
+  h+='<div class="quiz-prompt">'+prompt+'</div>';
+  if(q.type==='check'){
+    h+='<div class="quiz-checkbox-wrap" onclick="answerCheck(this)"><div class="pixel-checkbox" id="pxcb"></div><span class="checkbox-label">'+q.label+'</span></div>';
+    h+='<div class="feedback ok" id="fb" style="display:none">'+q.fb+'</div>';
+    h+='<button class="next-btn" id="nb" onclick="renderQ()">NEXT STEP &#9654;</button>';
+  }else if(q.type==='grid'){
+    h+='<div class="quiz-grid">';
+    q.cells.forEach(function(c,i){h+='<div class="grid-cell" id="gc'+i+'" onclick="toggleCell('+i+')">'+c+'</div>';});
+    h+='</div><button class="submit-btn" onclick="checkGrid()">VERIFY SELECTION</button>';
+    h+='<div class="feedback" id="fb" style="display:none"></div>';
+    h+='<button class="next-btn" id="nb" onclick="renderQ()">NEXT STEP &#9654;</button>';
+  }else if(q.type==='choice'){
+    h+='<div class="quiz-choices">';
+    q.choices.forEach(function(c,i){h+='<button class="choice-btn" onclick="answerChoice('+i+',this)">'+String.fromCharCode(65+i)+'. '+c+'</button>';});
+    h+='</div><div class="feedback" id="fb" style="display:none"></div>';
+    h+='<button class="next-btn" id="nb" onclick="renderQ()">NEXT STEP &#9654;</button>';
+  }else if(q.type==='text'){
+    if(q.flash)h+='<div id="fw" style="font-size:14px;color:var(--yellow);text-align:center;padding:8px">'+q.flash+'</div>';
+    h+='<input class="quiz-text-input" id="ti" type="text" placeholder="TYPE HERE..." autocapitalize="characters">';
+    h+='<button class="submit-btn" onclick="checkText()">SUBMIT</button>';
+    h+='<div class="feedback" id="fb" style="display:none"></div>';
+    h+='<button class="next-btn" id="nb" onclick="renderQ()">NEXT STEP &#9654;</button>';
   }
-}
-
-function updateTimer() {
-  const pct = gameState.timeLeft / gameState.maxTime;
-  const bar = document.getElementById('timer-bar');
-  bar.style.width = (pct * 100) + '%';
-  bar.className = 'timer-bar-inner';
-  if (pct > 0.5) bar.classList.add('ok');
-  else if (pct > 0.25) bar.classList.add('warn');
-  // red is default (no class needed)
-  document.getElementById('timer-text').textContent = gameState.timeLeft.toFixed(1) + 's';
-}
-
-function maybeSweat() {
-  if (gameState.charState === 0) return;
-  const area = document.getElementById('char-area');
-  const drop = document.createElement('div');
-  drop.className = 'sweat-particle';
-  drop.textContent = gameState.charState >= 3 ? '😭' : '💧';
-  drop.style.left = (20 + Math.random() * 60) + '%';
-  drop.style.top = (10 + Math.random() * 40) + '%';
-  area.appendChild(drop);
-  setTimeout(() => drop.remove(), 1000);
-}
-
-// ===== QUESTION RENDERING =====
-function getNextQ() {
-  const q = shuffledQ[qIndex % shuffledQ.length];
-  qIndex++;
-  // Re-shuffle when we loop
-  if (qIndex % shuffledQ.length === 0) {
-    shuffledQ.sort(() => Math.random() - 0.5);
-  }
-  return q;
-}
-
-function renderQuestion() {
-  const q = getNextQ();
-  gameState.currentQ = q;
-  gameState.answered = false;
-  const area = document.getElementById('quiz-area');
-  const num = gameState.score + 1;
-  let html = `
-    <div class="quiz-header">
-      <span class="quiz-label">PURCHASE VERIFICATION</span>
-      <span class="quiz-num">#${num}</span>
-    </div>
-    <div class="quiz-prompt">${q.prompt.replace(/
-/g,'<br>')}</div>
-  `;
-
-  if (q.type === 'checkbox') {
-    html += `
-      <div class="quiz-checkbox-wrap" onclick="answerCheckbox(this)">
-        <div class="pixel-checkbox" id="pxcb"></div>
-        <span class="checkbox-label">${q.label}</span>
-      </div>
-      <div class="feedback ok" id="fb" style="display:none">${q.feedback}</div>
-      <button class="next-btn" id="next-btn" onclick="nextQuestion()">NEXT STEP ▶</button>
-    `;
-  } else if (q.type === 'grid') {
-    const gridCells = q.cells.map((c, i) =>
-      `<div class="grid-cell" id="gc${i}" onclick="toggleGridCell(${i})">${c}</div>`
-    ).join('');
-    html += `
-      <div class="quiz-grid">${gridCells}</div>
-      <button class="submit-btn" onclick="checkGrid()">VERIFY SELECTION</button>
-      <div class="feedback" id="fb" style="display:none"></div>
-      <button class="next-btn" id="next-btn" onclick="nextQuestion()">NEXT STEP ▶</button>
-    `;
-  } else if (q.type === 'choice') {
-    const choices = q.choices.map((c, i) =>
-      `<button class="choice-btn" onclick="answerChoice(${i}, this)">${String.fromCharCode(65+i)}. ${c}</button>`
-    ).join('');
-    html += `<div class="quiz-choices">${choices}</div>
-      <div class="feedback" id="fb" style="display:none"></div>
-      <button class="next-btn" id="next-btn" onclick="nextQuestion()">NEXT STEP ▶</button>`;
-  } else if (q.type === 'text') {
-    let flashHtml = '';
-    if (q.flash) {
-      flashHtml = `<div id="flash-word" style="font-size:14px;color:var(--yellow);text-align:center;padding:8px;">${q.flash}</div>`;
-      setTimeout(() => {
-        const fw = document.getElementById('flash-word');
-        if (fw) fw.style.visibility = 'hidden';
-      }, 1200);
-    }
-    html += `
-      ${flashHtml}
-      <input class="quiz-text-input" id="text-input" type="text" placeholder="TYPE HERE..." autocomplete="off" autocapitalize="characters">
-      <button class="submit-btn" onclick="checkText()">SUBMIT</button>
-      <div class="feedback" id="fb" style="display:none"></div>
-      <button class="next-btn" id="next-btn" onclick="nextQuestion()">NEXT STEP ▶</button>
-    `;
-  }
-
-  area.innerHTML = html;
+  document.getElementById('quiz-area').innerHTML=h;
+  if(q.flash){setTimeout(function(){var fw=document.getElementById('fw');if(fw)fw.style.visibility='hidden';},1200);}
 }
 
 // ===== ANSWER HANDLERS =====
-let selectedCells = new Set();
-
-function answerCheckbox(wrap) {
-  if (gameState.answered) return;
-  const cb = document.getElementById('pxcb');
+function answerCheck(wrap){
+  if(G.answered)return;
+  var cb=document.getElementById('pxcb');
   cb.classList.toggle('checked');
-  if (cb.classList.contains('checked')) {
-    gameState.answered = true;
-    gameState.score++;
-    document.getElementById('hud-score-val').textContent = gameState.score;
-    document.getElementById('fb').style.display = 'block';
-    showNextBtn();
+  if(cb.classList.contains('checked')){
+    G.answered=true;G.score++;
+    document.getElementById('hud-score-val').textContent=G.score;
+    document.getElementById('fb').style.display='block';
+    document.getElementById('nb').classList.add('visible');
   }
 }
-
-function toggleGridCell(i) {
-  if (gameState.answered) return;
-  const cell = document.getElementById('gc' + i);
-  if (selectedCells.has(i)) {
-    selectedCells.delete(i);
-    cell.classList.remove('selected');
-  } else {
-    selectedCells.add(i);
-    cell.classList.add('selected');
+function toggleCell(i){
+  if(G.answered)return;
+  var c=document.getElementById('gc'+i);
+  if(selCells.has(i)){selCells.delete(i);c.classList.remove('selected');}
+  else{selCells.add(i);c.classList.add('selected');}
+}
+function checkGrid(){
+  if(G.answered)return;
+  var q=G.currentQ;
+  var ok=q.correct.every(function(i){return selCells.has(i);})&&selCells.size===q.correct.length;
+  var fb=document.getElementById('fb');
+  if(ok){
+    G.answered=true;G.score++;
+    document.getElementById('hud-score-val').textContent=G.score;
+    fb.className='feedback ok';fb.textContent=q.fbok||'CORRECT.';fb.style.display='block';
+    document.getElementById('nb').classList.add('visible');
+  }else{
+    fb.className='feedback err';fb.textContent=q.fberr||'INCORRECT.';fb.style.display='block';
+    selCells.clear();document.querySelectorAll('.grid-cell').forEach(function(c){c.classList.remove('selected');});
   }
 }
-
-function checkGrid() {
-  if (gameState.answered) return;
-  const q = gameState.currentQ;
-  const fb = document.getElementById('fb');
-  const correct = q.correct.every(i => selectedCells.has(i)) &&
-                  selectedCells.size === q.correct.length;
-  if (correct) {
-    gameState.answered = true;
-    gameState.score++;
-    document.getElementById('hud-score-val').textContent = gameState.score;
-    fb.className = 'feedback ok';
-    fb.textContent = q.feedback_ok || 'CORRECT. NEXT STEP REQUIRED.';
-    fb.style.display = 'block';
-    showNextBtn();
-  } else {
-    fb.className = 'feedback err';
-    fb.textContent = q.feedback_err || 'INCORRECT. TRY AGAIN.';
-    fb.style.display = 'block';
-    selectedCells.clear();
-    document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('selected'));
+function answerChoice(i,el){
+  if(G.answered)return;
+  var q=G.currentQ;
+  document.querySelectorAll('.choice-btn').forEach(function(b){b.style.pointerEvents='none';});
+  var fb=document.getElementById('fb');
+  if(i===q.correct){
+    el.classList.add('correct');G.answered=true;G.score++;
+    document.getElementById('hud-score-val').textContent=G.score;
+    fb.className='feedback ok';fb.textContent='VERIFIED. ONE MORE STEP.';fb.style.display='block';
+    document.getElementById('nb').classList.add('visible');
+  }else{
+    el.classList.add('wrong');fb.className='feedback err';fb.textContent='WRONG. SUSPICIOUS ACTIVITY.';fb.style.display='block';
+    setTimeout(function(){
+      document.querySelectorAll('.choice-btn').forEach(function(b){b.classList.remove('wrong','correct');b.style.pointerEvents='';});
+      fb.style.display='none';
+    },800);
   }
 }
-
-function answerChoice(i, el) {
-  if (gameState.answered) return;
-  const q = gameState.currentQ;
-  const fb = document.getElementById('fb');
-  document.querySelectorAll('.choice-btn').forEach(b => b.style.pointerEvents = 'none');
-  if (i === q.correct) {
-    el.classList.add('correct');
-    gameState.answered = true;
-    gameState.score++;
-    document.getElementById('hud-score-val').textContent = gameState.score;
-    fb.className = 'feedback ok';
-    fb.textContent = 'VERIFIED. ONE MORE STEP.';
-    fb.style.display = 'block';
-    showNextBtn();
-  } else {
-    el.classList.add('wrong');
-    fb.className = 'feedback err';
-    fb.textContent = 'WRONG. SUSPICIOUS ACTIVITY DETECTED.';
-    fb.style.display = 'block';
-    setTimeout(() => {
-      document.querySelectorAll('.choice-btn').forEach(b => {
-        b.classList.remove('wrong','correct');
-        b.style.pointerEvents = '';
-      });
-      fb.style.display = 'none';
-    }, 800);
+function checkText(){
+  if(G.answered)return;
+  var val=document.getElementById('ti').value.trim().toUpperCase();
+  var fb=document.getElementById('fb');
+  if(val===G.currentQ.answer.toUpperCase()){
+    G.answered=true;G.score++;
+    document.getElementById('hud-score-val').textContent=G.score;
+    fb.className='feedback ok';fb.textContent='INPUT ACCEPTED.';fb.style.display='block';
+    document.getElementById('nb').classList.add('visible');
+  }else{
+    fb.className='feedback err';fb.textContent='INCORRECT INPUT.';fb.style.display='block';
   }
-}
-
-function checkText() {
-  if (gameState.answered) return;
-  const q = gameState.currentQ;
-  const val = document.getElementById('text-input').value.trim().toUpperCase();
-  const fb = document.getElementById('fb');
-  if (val === q.answer.toUpperCase()) {
-    gameState.answered = true;
-    gameState.score++;
-    document.getElementById('hud-score-val').textContent = gameState.score;
-    fb.className = 'feedback ok';
-    fb.textContent = 'INPUT ACCEPTED. ADDITIONAL VERIFICATION NEEDED.';
-    fb.style.display = 'block';
-    showNextBtn();
-  } else {
-    fb.className = 'feedback err';
-    fb.textContent = 'INCORRECT INPUT. TRY AGAIN.';
-    fb.style.display = 'block';
-  }
-}
-
-function showNextBtn() {
-  const nb = document.getElementById('next-btn');
-  if (nb) nb.classList.add('visible');
-}
-
-function nextQuestion() {
-  selectedCells.clear();
-  renderQuestion();
 }
 
 // ===== SOLD OUT =====
-function triggerSoldOut() {
-  const flash = document.getElementById('flash-overlay');
-  flash.classList.add('flash');
-  setTimeout(() => flash.classList.remove('flash'), 300);
-  setTimeout(() => {
+function soldOut(){
+  var fl=document.getElementById('flash-overlay');
+  fl.classList.add('flash');setTimeout(function(){fl.classList.remove('flash');},300);
+  setTimeout(function(){
     document.getElementById('sold-out-overlay').classList.add('active');
-    document.getElementById('final-score-val').textContent = gameState.score;
-    gameState.lastScore = gameState.score;
-    gameState.lastDiff = gameState.difficulty;
-    checkRankEligibility();
-    drawChar(document.getElementById('char-canvas'), 3);
-  }, 400);
+    document.getElementById('final-score-val').textContent=G.score;
+    G.lastScore=G.score;G.lastDiff=G.diff;
+    var scores=getScores(G.diff);
+    var btn=document.getElementById('rank-in-btn');
+    btn.style.display=(scores.length<10||G.score>scores[scores.length-1].score)?'block':'none';
+    drawChar(document.getElementById('char-canvas'),3);
+  },400);
 }
 
-function checkRankEligibility() {
-  const scores = getScores(gameState.difficulty);
-  const btn = document.getElementById('rank-in-btn');
-  if (scores.length < 10 || gameState.score > scores[scores.length-1].score) {
-    btn.style.display = 'block';
-  } else {
-    btn.style.display = 'none';
+// ===== RANKING =====
+function getScores(d){try{return JSON.parse(localStorage.getItem('smc_'+d)||'[]');}catch(e){return[];}}
+function saveScore(d,ini,score){
+  var s=getScores(d);s.push({ini:ini,score:score,ts:Date.now()});
+  s.sort(function(a,b){return b.score-a.score||a.ts-b.ts;});
+  localStorage.setItem('smc_'+d,JSON.stringify(s.slice(0,10)));
+}
+function loadRanking(diff){
+  diff=diff||'easy';
+  var scores=getScores(diff);
+  var titles=['HYPE KING','QUEUE LORD','CART GOBLIN','MANUAL COP','LAST HUMAN','BOT SUSPECT','REFRESH MONKEY','QUEUE GHOST','SLOW CLICKER','SOLD OUT SOUL'];
+  var h='';
+  for(var i=0;i<10;i++){
+    var s=scores[i];
+    if(s){h+='<div class="rank-row'+(i<3?' top3':'')+'"><span class="rank-pos">'+(i+1)+'.</span><span class="rank-initials">'+s.ini+'</span><div style="flex:1"><div class="rank-score">'+s.score+' VER.</div><div class="rank-label">'+(titles[i]||'')+'</div></div></div>';}
+    else{h+='<div class="rank-row empty"><span class="rank-pos">'+(i+1)+'.</span><span class="rank-initials">---</span><div style="flex:1"><div class="rank-score">-</div></div></div>';}
   }
+  document.getElementById('ranking-table').innerHTML=h;
 }
-
-// ===== RANKINGS (localStorage) =====
-function getScores(diff) {
-  try {
-    return JSON.parse(localStorage.getItem('smc_scores_' + diff) || '[]');
-  } catch(e) { return []; }
-}
-
-function saveScore(diff, initials, score) {
-  let scores = getScores(diff);
-  scores.push({ initials, score, ts: Date.now() });
-  scores.sort((a,b) => b.score - a.score || a.ts - b.ts);
-  scores = scores.slice(0, 10);
-  localStorage.setItem('smc_scores_' + diff, JSON.stringify(scores));
-}
-
-function loadRanking(diff) {
-  diff = diff || 'easy';
-  const table = document.getElementById('ranking-table');
-  const scores = getScores(diff);
-  const TITLES = ['HYPE KING','QUEUE LORD','CART GOBLIN','MANUAL COP','LAST HUMAN','BOT SUSPECT','REFRESH MONKEY','QUEUE GHOST','SLOW CLICKER','SOLD OUT SOUL'];
-  let html = '';
-  for (let i = 0; i < 10; i++) {
-    const s = scores[i];
-    const isTop3 = i < 3;
-    if (s) {
-      html += `<div class="rank-row${isTop3?' top3':''}">
-        <span class="rank-pos">${i+1}.</span>
-        <span class="rank-initials">${s.initials}</span>
-        <div style="flex:1;">
-          <div class="rank-score">${s.score} VER.</div>
-          <div class="rank-label">${TITLES[i]||''}</div>
-        </div>
-      </div>`;
-    } else {
-      html += `<div class="rank-row empty">
-        <span class="rank-pos">${i+1}.</span>
-        <span class="rank-initials">---</span>
-        <div style="flex:1;"><div class="rank-score">-</div></div>
-      </div>`;
-    }
-  }
-  table.innerHTML = html;
-}
-
-function switchRankTab(diff, el) {
-  document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  loadRanking(diff);
+function switchRankTab(diff,el){
+  document.querySelectorAll('.rank-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');loadRanking(diff);
 }
 
 // ===== INITIALS =====
-let initialsArr = ['','',''];
-let initPos = 0;
-
-function showInitials() {
-  initialsArr = ['','',''];
-  initPos = 0;
+var iniArr=['','',''],iniPos=0;
+function showInitials(){
+  iniArr=['','',''];iniPos=0;
   document.getElementById('sold-out-overlay').classList.remove('active');
   showScreen('initials-screen');
-  renderInitialBoxes();
-  renderKeyboard();
+  renderIniBoxes();renderKeyboard();
 }
-
-function renderInitialBoxes() {
-  for (let i = 0; i < 3; i++) {
-    const box = document.getElementById('ib' + i);
-    box.textContent = initialsArr[i] || '_';
-    box.className = 'initial-box';
-    if (i === initPos) box.classList.add('active');
-    if (initialsArr[i]) box.classList.add('filled');
+function renderIniBoxes(){
+  for(var i=0;i<3;i++){
+    var b=document.getElementById('ib'+i);
+    b.textContent=iniArr[i]||'_';
+    b.className='initial-box'+(i===iniPos?' active':'')+(iniArr[i]?' filled':'');
   }
-  document.getElementById('confirm-btn').disabled = initialsArr.some(c => !c);
+  document.getElementById('confirm-btn').disabled=iniArr.some(function(c){return!c;});
+}
+function renderKeyboard(){
+  var keys='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('').concat(['DEL','OK']);
+  document.getElementById('initials-keyboard').innerHTML=keys.map(function(k){
+    return '<button class="key-btn'+(k==='DEL'||k==='OK'?' special':'')+ '" onclick="pressKey(\''+k+'\')">'+k+'</button>';
+  }).join('');
+}
+function pressKey(k){
+  if(k==='DEL'){if(iniPos>0)iniPos--;iniArr[iniPos]='';}
+  else if(k==='OK'){submitInitials();return;}
+  else if(iniPos<3){iniArr[iniPos]=k;if(iniPos<2)iniPos++;}
+  iniPos=Math.max(0,Math.min(iniPos,2));
+  renderIniBoxes();
+}
+function submitInitials(){
+  var ini=iniArr.join('');
+  if(ini.replace(/ /g,'').length<1)return;
+  saveScore(G.lastDiff,ini,G.lastScore);
+  showScreen('ranking-screen');loadRanking(G.lastDiff);
+  var idx=['easy','normal','hard'].indexOf(G.lastDiff);
+  document.querySelectorAll('.rank-tab').forEach(function(t,i){t.classList.toggle('active',i===idx);});
 }
 
-function renderKeyboard() {
-  const keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('').concat(['DEL','OK']);
-  const kb = document.getElementById('initials-keyboard');
-  kb.innerHTML = keys.map(k =>
-    `<button class="key-btn${k==='DEL'||k==='OK'?' special':''}" onclick="pressKey('${k}')">${k}</button>`
-  ).join('');
-}
-
-function pressKey(k) {
-  if (k === 'DEL') {
-    if (initPos > 0) initPos--;
-    initialsArr[initPos] = '';
-  } else if (k === 'OK') {
-    submitInitials();
-    return;
-  } else {
-    if (initPos < 3) {
-      initialsArr[initPos] = k;
-      initPos = Math.min(initPos + 1, 3);
-    }
-  }
-  initPos = Math.max(0, Math.min(initPos, 2));
-  if (initialsArr[initPos]) initPos = Math.min(initPos + 1, 3);
-  renderInitialBoxes();
-}
-
-function submitInitials() {
-  const ini = initialsArr.join('');
-  if (ini.length < 3) return;
-  saveScore(gameState.lastDiff, ini, gameState.lastScore);
-  showScreen('ranking-screen');
-  loadRanking(gameState.lastDiff);
-  // Highlight matching tab
-  const tabs = document.querySelectorAll('.rank-tab');
-  const idx = ['easy','normal','hard'].indexOf(gameState.lastDiff);
-  tabs.forEach((t,i) => t.classList.toggle('active', i === idx));
-}
-
-// ===== INIT PIXEL ART =====
-window.addEventListener('load', () => {
+// ===== INIT =====
+window.addEventListener('load',function(){
   drawTitleChar(document.getElementById('title-canvas'));
-  drawTee(document.getElementById('item-canvas-easy'));
-  drawHoodie(document.getElementById('item-canvas-normal'));
-  drawCollab(document.getElementById('item-canvas-hard'));
+  drawTee(document.getElementById('ic-easy'));
+  drawHoodie(document.getElementById('ic-normal'));
+  drawCollab(document.getElementById('ic-hard'));
 });
 </script>
 </body>
