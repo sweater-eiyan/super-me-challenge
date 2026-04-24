@@ -1,1 +1,1520 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SUPER ME CHALLENGE</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden}canvas{display:block;image-rendering:pixelated}</style></head><body><canvas id="c"></canvas><script>const c=document.getElementById('c'),ctx=c.getContext('2d');const W=540,H=600;c.width=W;c.height=H;const API='https://super-me-ranking.sweater-eiyan.workers.dev';const ITEMS=[{name:'Logo Don Tee',diff:'EASY',time:45,color:'#e8e8e8'},{name:'BOXLOGO Hoodie',diff:'NORMAL',time:30,color:'#c8a020'},{name:'Limited Collab',diff:'HARD',time:20,color:'#ff4444'}];const QS=[{q:'Select all images containing FIRE HYDRANT',opts:['🚒','🧯','🚑','🐕','🏠','🚰','🔥','🛻','🧲'],ans:[5]},{q:'Select all images containing TRAFFIC LIGHT',opts:['🚦','🛑','🚗','🚦','⚠️','🔴','🚥','🏎️','🛤️'],ans:[0,3,6]},{q:'Select all images containing A DOG',opts:['🐕','🌭','🐈','🦊','🐩','🐾','🐶','🍖','🦮'],ans:[0,4,6,8]},{q:'Select all images containing CROSSWALK',opts:['🛤️','🚶','⬜','🚸','🏃','🦓','🚷','🗺️','🛣️'],ans:[2,3,5]},{q:'Select all images containing A BUS',opts:['🚌','🚐','✈️','🚎','🚂','🚃','🏨','🚑','🚕'],ans:[0,1,3]},{q:'Select all images containing BICYCLE',opts:['🚲','🛵','🚴','🛴','🏍️','🚵','🚁','🛺','🤸'],ans:[0,2,5]},{q:'Select all images containing FOOD',opts:['🍕','🔧','🍔','📱','🍜','🪑','🌮','📦','🍣'],ans:[0,2,4,6,8]},{q:'Select all images containing A CAT',opts:['🐱','🦁','🐯','😸','🐅','🙀','🐻','😻','🐼'],ans:[0,3,5,7]},{q:'Select all images containing MOUNTAIN',opts:['⛰️','🏔️','🌋','🗻','🏕️','🌄','🏞️','🗼','🌅'],ans:[0,1,2,3]},{q:'Select all images containing A BOAT',opts:['⛵','🚢','🛥️','🛶','✈️','🚁','🛸','🚤','🏊'],ans:[0,1,2,3,7]},{q:'Select all images containing UMBRELLA',opts:['☂️','🌂','☔','🎪','🏖️','🌧️','⛱️','🎠','🧢'],ans:[0,1,2,6]},{q:'Select all images containing A TREE',opts:['🌲','🌴','🌵','🌾','🏡','🌳','🌿','🍄','🌱'],ans:[0,1,2,5]},{q:'Select all images containing CLOCK',opts:['⏰','🕐','⌚','📅','⏱️','🗓️','🕰️','⌛','📆'],ans:[0,1,2,4,6,7]},{q:'Select all images containing A STAR',opts:['⭐','🌟','💫','✨','🌙','☀️','🌠','🎇','🎆'],ans:[0,1,2,3,6]},{q:'Select all images containing VEHICLE',opts:['🚗','🛺','🚀','🛵','🏎️','🛻','🛸','🚐','🚲'],ans:[0,1,3,4,5,7,8]}];let scene='title',selItem=0,maxTime=45,timeLeft=0,score=0,qIdx=0,selected=[],ranking=[],initials='AAA',initPos=0,rankData=[];let curQ=null,sweat=0,lastT=0,animT=0;const AC=new(window.AudioContext||window.webkitAudioContext)();function beep(f,d,t='square',v=0.3){const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.start();o.stop(AC.currentTime+d);}function sfxOk(){beep(523,0.1);setTimeout(()=>beep(659,0.1),100);setTimeout(()=>beep(784,0.15),200);}function sfxFail(){beep(200,0.2,'sawtooth');setTimeout(()=>beep(150,0.3,'sawtooth'),200);}function sfxSoldOut(){beep(400,0.1,'sawtooth');setTimeout(()=>beep(300,0.1,'sawtooth'),120);setTimeout(()=>beep(200,0.3,'sawtooth'),240);}function sfxRank(){beep(784,0.1);setTimeout(()=>beep(880,0.1),100);setTimeout(()=>beep(988,0.1),200);setTimeout(()=>beep(1047,0.3),300);}let bgmInt=null;function startBGM(){if(bgmInt)return;let n=0;const notes=[262,294,330,349,392,440,392,349];bgmInt=setInterval(()=>{beep(notes[n%notes.length],0.12,'square',0.1);n++;},200);}function stopBGM(){clearInterval(bgmInt);bgmInt=null;}function drawBalaclava(x,y,s,emotion){ctx.save();ctx.translate(x,y);const sc=s||1;ctx.scale(sc,sc);ctx.fillStyle='#f0c090';ctx.fillRect(-8,12,16,20);ctx.fillStyle='#d4a060';ctx.fillRect(-6,28,3,18);ctx.fillRect(3,28,3,18);ctx.fillStyle='#222';ctx.fillRect(-12,-20,24,36);ctx.fillRect(-10,-22,20,4);ctx.fillStyle='#1a1a1a';ctx.fillRect(-14,-4,6,12);ctx.fillRect(8,-4,6,12);ctx.fillStyle='#f0c090';ctx.fillRect(-7,2,14,12);if(emotion===0){ctx.fillStyle='#fff';ctx.fillRect(-5,5,4,5);ctx.fillRect(1,5,4,5);ctx.fillStyle='#3a6fd8';ctx.fillRect(-4,6,3,3);ctx.fillRect(2,6,3,3);ctx.fillStyle='#000';ctx.fillRect(-3,7,2,2);ctx.fillRect(3,7,2,2);ctx.strokeStyle='#c06030';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,11,3,0.2,Math.PI-0.2);ctx.stroke();}else if(emotion===1){ctx.fillStyle='#fff';ctx.fillRect(-5,5,4,5);ctx.fillRect(1,5,4,5);ctx.fillStyle='#3a6fd8';ctx.fillRect(-4,7,3,3);ctx.fillRect(2,7,3,3);ctx.fillStyle='#000';ctx.fillRect(-3,8,2,2);ctx.fillRect(3,8,2,2);ctx.fillStyle='#aaddff';ctx.fillRect(-5,10,2,3);ctx.fillRect(4,10,2,3);ctx.strokeStyle='#c06030';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-3,13);ctx.lineTo(3,13);ctx.stroke();}else{ctx.fillStyle='#fff';ctx.fillRect(-5,6,4,5);ctx.fillRect(1,6,4,5);ctx.fillStyle='#3a6fd8';ctx.fillRect(-4,8,3,3);ctx.fillRect(2,8,3,3);ctx.fillStyle='#000';ctx.fillRect(-3,9,2,2);ctx.fillRect(3,9,2,2);ctx.fillStyle='#aaddff';ctx.fillRect(-5,11,2,4);ctx.fillRect(-3,13,2,4);ctx.fillRect(4,11,2,4);ctx.fillRect(3,13,2,4);ctx.strokeStyle='#c06030';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,14,3,Math.PI+0.3,-0.3);ctx.stroke();}ctx.restore();}function drawTee(x,y,color){ctx.save();ctx.translate(x,y);ctx.fillStyle=color||'#e8e8e8';ctx.fillRect(-20,-15,40,35);ctx.fillRect(-32,-15,12,15);ctx.fillRect(20,-15,12,15);ctx.fillStyle='#333';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillText('Super me',0,5);ctx.restore();}function drawHoodie(x,y,color){ctx.save();ctx.translate(x,y);ctx.fillStyle=color||'#c8a020';ctx.fillRect(-22,-15,44,38);ctx.fillRect(-34,-15,12,18);ctx.fillRect(22,-15,12,18);ctx.fillRect(-8,-28,16,18);ctx.fillStyle='#888';ctx.fillRect(-4,-14,8,20);ctx.fillStyle='#333';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillText('BOXLOGO',0,5);ctx.restore();}function drawCollab(x,y,color){ctx.save();ctx.translate(x,y);ctx.fillStyle=color||'#ff4444';ctx.fillRect(-22,-18,44,40);ctx.fillRect(-34,-18,12,18);ctx.fillRect(22,-18,12,18);ctx.fillRect(-8,-30,16,16);ctx.fillStyle='gold';for(let i=-15;i<=15;i+=8){ctx.fillRect(i,-8,5,5);}ctx.fillStyle='#fff';ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillText('COLLAB',0,8);ctx.restore();}function drawTitle(){ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.fillStyle='#ff0000';ctx.font='bold 36px monospace';ctx.textAlign='center';ctx.fillText('SUPER ME',W/2,70);ctx.fillStyle='#fff';ctx.font='bold 18px monospace';ctx.fillText('CHALLENGE',W/2,100);ctx.fillStyle='#888';ctx.font='10px monospace';ctx.fillText('- SELECT YOUR ITEM -',W/2,135);const xs=[90,270,450];const drawFns=[drawTee,drawHoodie,drawCollab];const colors=['#e8e8e8','#c8a020','#ff4444'];const diffs=['EASY','NORMAL','HARD'];const times=['45sec','30sec','20sec'];const names=['Logo Don Tee','BOXLOGO Hoodie','Limited Collab'];for(let i=0;i<3;i++){const x=xs[i];const sel=(selItem===i);ctx.fillStyle=sel?'#ff0000':'#222';ctx.fillRect(x-55,148,110,120);ctx.strokeStyle=sel?'#ff4444':'#444';ctx.lineWidth=2;ctx.strokeRect(x-55,148,110,120);drawFns[i](x,195,colors[i]);ctx.fillStyle=sel?'#fff':'#888';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillText(names[i],x,240);ctx.fillStyle=sel?'#ffff00':'#666';ctx.font='8px monospace';ctx.fillText(diffs[i]+' / '+times[i],x,255);}ctx.fillStyle='#555';ctx.font='9px monospace';ctx.textAlign='center';ctx.fillText('CLICK ITEM OR PRESS ENTER TO START',W/2,295);ctx.fillStyle='#333';ctx.font='8px monospace';ctx.fillText('VER:3.0  (C) SUPER ME INC.',W/2,516);}function drawGame(){ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,W,H);const ratio=timeLeft/maxTime;const emotion=ratio>0.6?0:ratio>0.3?1:2;ctx.fillStyle='#111';ctx.fillRect(0,0,W,38);const bw=W-120;ctx.fillStyle='#333';ctx.fillRect(10,8,bw,18);ctx.fillStyle=ratio>0.5?'#00cc44':ratio>0.25?'#ffaa00':'#ff2222';ctx.fillRect(10,8,bw*ratio,18);ctx.strokeStyle='#666';ctx.lineWidth=1;ctx.strokeRect(10,8,bw,18);ctx.fillStyle='#fff';ctx.font='bold 9px monospace';ctx.textAlign='left';ctx.fillText('TIME',12,22);ctx.fillStyle='#fff';ctx.font='bold 10px monospace';ctx.textAlign='right';ctx.fillText(Math.ceil(timeLeft)+'s',W-115,23);drawBalaclava(W-55,20,1.1,emotion);if(sweat>0&&emotion>0){ctx.fillStyle='rgba(100,180,255,0.8)';ctx.font='12px monospace';ctx.textAlign='left';ctx.fillText(';;',W-40,12);sweat=Math.max(0,sweat-1);}ctx.fillStyle='#fff';ctx.font='bold 10px monospace';ctx.textAlign='right';ctx.fillText('SCORE:'+score,W-10,56);ctx.fillStyle='#888';ctx.font='8px monospace';ctx.fillText(ITEMS[selItem].name,W-10,68);if(!curQ)return;const qx=15,qy=75,qw=W-30,qh=370;ctx.fillStyle='#f0f0f0';ctx.fillRect(qx,qy,qw,qh);ctx.strokeStyle='#ccc';ctx.lineWidth=1;ctx.strokeRect(qx,qy,qw,qh);ctx.fillStyle='#333';ctx.font='bold 11px monospace';ctx.textAlign='left';ctx.fillText(curQ.q,qx+8,qy+20);ctx.fillStyle='#555';ctx.font='9px monospace';ctx.fillText('Click all that apply. Click VERIFY when done.',qx+8,qy+35);const cols=3,rows=3,cellW=Math.floor((qw-16)/cols),cellH=58;for(let i=0;i<9;i++){const col=i%cols,row=Math.floor(i/cols);const cx=qx+8+col*cellW,cy=qy+45+row*cellH;const isSel=selected.includes(i);ctx.fillStyle=isSel?'#d0e8ff':'#fff';ctx.fillRect(cx,cy,cellW-4,cellH-4);ctx.strokeStyle=isSel?'#2266cc':'#bbb';ctx.lineWidth=isSel?2:1;ctx.strokeRect(cx,cy,cellW-4,cellH-4);ctx.font='26px monospace';ctx.textAlign='center';ctx.fillText(curQ.opts[i],cx+(cellW-4)/2,cy+32);if(isSel){ctx.fillStyle='rgba(34,102,204,0.15)';ctx.fillRect(cx,cy,cellW-4,cellH-4);}}const btnY=qy+45+rows*cellH+6;ctx.fillStyle='#4285f4';ctx.fillRect(qx+8,btnY,qw-16,32);ctx.fillStyle='#fff';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText('VERIFY',W/2,btnY+21);}function drawSoldOut(){ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.fillStyle='#ff0000';ctx.font='bold 60px monospace';ctx.textAlign='center';ctx.fillText('SOLD',W/2,200);ctx.fillText('OUT',W/2,270);ctx.fillStyle='#888';ctx.font='14px monospace';ctx.fillText('ITEM: '+ITEMS[selItem].name,W/2,320);ctx.fillStyle='#ffff00';ctx.font='bold 16px monospace';ctx.fillText('YOUR SCORE: '+score,W/2,360);ctx.fillStyle='#555';ctx.font='10px monospace';ctx.fillText('PRESS ENTER OR CLICK TO CONTINUE',W/2,420);}function drawNameEntry(){ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.fillStyle='#ffff00';ctx.font='bold 20px monospace';ctx.textAlign='center';ctx.fillText('YOU RANKED!',W/2,120);ctx.fillStyle='#fff';ctx.font='14px monospace';ctx.fillText('ENTER YOUR NAME (3 CHARS)',W/2,160);ctx.font='bold 40px monospace';let disp='';for(let i=0;i<3;i++){disp+=(i===initPos?'['+initials[i]+']':' '+initials[i]+' ');}ctx.fillStyle='#00ff88';ctx.fillText(disp,W/2,240);ctx.fillStyle='#555';ctx.font='10px monospace';ctx.fillText('LEFT/RIGHT: MOVE  UP/DOWN: CHANGE CHAR',W/2,300);ctx.fillText('ENTER: CONFIRM',W/2,320);}function drawRanking(){ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.fillStyle='#ff0000';ctx.font='bold 22px monospace';ctx.textAlign='center';ctx.fillText('RANKING',W/2,45);ctx.fillStyle='#ffff00';ctx.font='bold 11px monospace';ctx.fillText('-- '+ITEMS[selItem].diff+' --',W/2,65);const board=rankData;for(let i=0;i<Math.min(10,board.length);i++){const r=board[i];ctx.fillStyle=i<3?'#ffdd44':'#aaa';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText((i+1)+'.',55,100+i*38);ctx.fillStyle=i<3?'#fff':'#888';ctx.fillText(r.name,90,100+i*38);ctx.fillStyle=i<3?'#ffdd44':'#aaa';ctx.textAlign='right';ctx.fillText(r.score+'pts',W-55,100+i*38);}if(board.length===0){ctx.fillStyle='#555';ctx.font='12px monospace';ctx.textAlign='center';ctx.fillText('NO RECORDS YET',W/2,200);}ctx.fillStyle='#444';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText('PRESS ENTER OR CLICK TO RETURN',W/2,490);}function nextQ(){const pool=[...QS];qIdx=Math.floor(Math.random()*pool.length);curQ=pool[qIdx];selected=[];}function startGame(idx){selItem=idx;maxTime=ITEMS[idx].time;timeLeft=maxTime;score=0;scene='game';nextQ();startBGM();}function soldOut(){stopBGM();sfxSoldOut();scene='soldout';}function checkRank(cb){fetch(API+'/ranking?difficulty='+ITEMS[selItem].diff).then(r=>r.json()).then(d=>{rankData=d.board||[];const tenthScore=rankData.length<10?0:(rankData[9]||{score:0}).score;cb(score>tenthScore||(rankData.length<10&&score>0));}).catch(()=>{rankData=[];cb(score>0);});}function submitScore(name){fetch(API+'/ranking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,score:score,difficulty:ITEMS[selItem].diff})}).then(r=>r.json()).then(()=>{fetch(API+'/ranking?difficulty='+ITEMS[selItem].diff).then(r=>r.json()).then(d=>{rankData=d.board||[];scene='ranking';});}).catch(()=>{scene='ranking';});}function verifyAnswer(){const correct=curQ.ans.slice().sort().join(',')===selected.slice().sort().join(',');if(correct){score++;sfxOk();sweat=30;nextQ();}else{sfxFail();selected=[];}}const CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';function charUp(i){const idx=CHARS.indexOf(initials[i]);const ni=(idx+1)%CHARS.length;initials=initials.substring(0,i)+CHARS[ni]+initials.substring(i+1);}function charDn(i){const idx=CHARS.indexOf(initials[i]);const ni=(idx-1+CHARS.length)%CHARS.length;initials=initials.substring(0,i)+CHARS[ni]+initials.substring(i+1);}document.addEventListener('keydown',e=>{AC.resume();if(scene==='title'){if(e.key==='ArrowLeft'){selItem=(selItem+2)%3;beep(440,0.05);}else if(e.key==='ArrowRight'){selItem=(selItem+1)%3;beep(440,0.05);}else if(e.key==='Enter'){startGame(selItem);}}else if(scene==='game'){if(e.key==='Enter'){verifyAnswer();}}else if(scene==='soldout'){if(e.key==='Enter'){checkRank(r=>{if(r){initials='AAA';initPos=0;scene='nameentry';}else{fetch(API+'/ranking?difficulty='+ITEMS[selItem].diff).then(r=>r.json()).then(d=>{rankData=d.board||[];scene='ranking';}).catch(()=>{rankData=[];scene='ranking';});}});}}else if(scene==='nameentry'){if(e.key==='ArrowLeft'){initPos=(initPos+2)%3;beep(440,0.05);}else if(e.key==='ArrowRight'){initPos=(initPos+1)%3;beep(440,0.05);}else if(e.key==='ArrowUp'){charUp(initPos);beep(440,0.05);}else if(e.key==='ArrowDown'){charDn(initPos);beep(440,0.05);}else if(e.key==='Enter'){submitScore(initials);sfxRank();}}else if(scene==='ranking'){if(e.key==='Enter'){scene='title';}}});c.addEventListener('click',e=>{AC.resume();const r=c.getBoundingClientRect();const mx=(e.clientX-r.left)*(W/r.width);const my=(e.clientY-r.top)*(H/r.height);if(scene==='title'){const xs=[90,270,450];for(let i=0;i<3;i++){if(mx>=xs[i]-55&&mx<=xs[i]+55&&my>=148&&my<=268){if(selItem===i){startGame(i);}else{selItem=i;beep(440,0.05);}return;}}if(my>=280&&my<=295){startGame(selItem);}}else if(scene==='game'&&curQ){const qx=15,qy=75,qw=W-30;const cols=3,cellW=Math.floor((qw-16)/cols),cellH=58;for(let i=0;i<9;i++){const col=i%cols,row=Math.floor(i/cols);const cx=qx+8+col*cellW,cy=qy+45+row*cellH;if(mx>=cx&&mx<=cx+cellW-4&&my>=cy&&my<=cy+cellH-4){const idx=selected.indexOf(i);if(idx>=0){selected.splice(idx,1);}else{selected.push(i);}beep(440,0.05);return;}}const btnY=qy+45+3*cellH+6;if(mx>=qx+8&&mx<=qx+qw-8&&my>=btnY&&my<=btnY+32){verifyAnswer();}}else if(scene==='soldout'){checkRank(r=>{if(r){initials='AAA';initPos=0;scene='nameentry';}else{fetch(API+'/ranking?difficulty='+ITEMS[selItem].diff).then(r=>r.json()).then(d=>{rankData=d.board||[];scene='ranking';}).catch(()=>{rankData=[];scene='ranking';});}});}else if(scene==='ranking'){scene='title';}});let lastTime=0;function loop(ts){const dt=Math.min((ts-lastTime)/1000,0.1);lastTime=ts;if(scene==='game'){timeLeft-=dt;if(timeLeft<=0){timeLeft=0;soldOut();}}if(scene==='title')drawTitle();else if(scene==='game')drawGame();else if(scene==='soldout')drawSoldOut();else if(scene==='nameentry')drawNameEntry();else if(scene==='ranking')drawRanking();requestAnimationFrame(loop);}requestAnimationFrame(loop);</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SUPER ME CHALLENGE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root {
+    --red: #D10000;
+    --dark-red: #8B0000;
+    --black: #0A0A0A;
+    --white: #F0F0F0;
+    --gray: #888888;
+    --dark-gray: #222222;
+    --yellow: #FFD700;
+    --green: #00AA00;
+    --pixel: 2px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-x: hidden;
+  }
+
+  #game-container {
+    width: 100%;
+    max-width: 420px;
+    min-height: 100vh;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-left: 2px solid #333;
+    border-right: 2px solid #333;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; flex-direction: column; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ===== TITLE SCREEN ===== */
+  #title-screen {
+    background: var(--black);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #title-screen::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(255,255,255,0.015) 3px,
+      rgba(255,255,255,0.015) 4px
+    );
+    pointer-events: none;
+  }
+
+  .brand-logo {
+    background: var(--red);
+    padding: 10px 20px;
+    text-align: center;
+    border: 3px solid var(--white);
+    image-rendering: pixelated;
+    position: relative;
+  }
+  .brand-logo::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px solid rgba(255,255,255,0.3);
+    pointer-events: none;
+  }
+  .brand-name {
+    font-size: 18px;
+    color: var(--white);
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 0 #000;
+    display: block;
+  }
+  .brand-sub {
+    font-size: 7px;
+    color: rgba(255,255,255,0.7);
+    display: block;
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  .title-pixel-art {
+    width: 160px;
+    height: 160px;
+    image-rendering: pixelated;
+  }
+
+  .game-title {
+    text-align: center;
+    line-height: 2;
+  }
+  .game-title .main { font-size: 14px; color: var(--yellow); text-shadow: 2px 2px 0 var(--dark-red); }
+  .game-title .sub { font-size: 8px; color: var(--gray); }
+
+  .blink {
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .title-btn {
+    background: var(--red);
+    color: var(--white);
+    border: 3px solid var(--white);
+    padding: 14px 28px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+    letter-spacing: 1px;
+    position: relative;
+    transition: transform 0.1s;
+  }
+  .title-btn:active { transform: scale(0.97); }
+  .title-btn.secondary {
+    background: var(--dark-gray);
+    border-color: var(--gray);
+    font-size: 9px;
+  }
+  .pixel-shadow {
+    box-shadow: 4px 4px 0 var(--dark-red);
+  }
+  .pixel-shadow.secondary {
+    box-shadow: 4px 4px 0 #111;
+  }
+
+  /* ===== ITEM SELECT ===== */
+  #item-select {
+    padding: 16px;
+    gap: 12px;
+  }
+  .screen-header {
+    background: var(--dark-gray);
+    border: 2px solid var(--red);
+    padding: 10px;
+    text-align: center;
+    font-size: 9px;
+    color: var(--yellow);
+    letter-spacing: 1px;
+  }
+  .screen-subtitle {
+    font-size: 7px;
+    color: var(--gray);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .item-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .item-card {
+    border: 2px solid var(--gray);
+    background: var(--dark-gray);
+    padding: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.1s, transform 0.1s;
+  }
+  .item-card:active { transform: scale(0.98); }
+  .item-card.easy { border-color: var(--green); }
+  .item-card.normal { border-color: var(--yellow); }
+  .item-card.hard { border-color: var(--red); }
+  .item-card:hover { filter: brightness(1.2); }
+
+  .item-card-inner { display: flex; gap: 10px; align-items: center; }
+
+  .item-pixel {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+
+  .item-info { flex: 1; }
+  .item-name { font-size: 9px; color: var(--white); margin-bottom: 6px; line-height: 1.6; }
+  .item-stats { display: flex; flex-direction: column; gap: 3px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 7px; }
+  .stat-label { color: var(--gray); }
+  .stat-bar-wrap { display: flex; gap: 2px; }
+  .stat-pip {
+    width: 8px; height: 8px;
+    background: var(--dark-gray);
+    border: 1px solid var(--gray);
+  }
+  .stat-pip.filled.easy { background: var(--green); border-color: var(--green); }
+  .stat-pip.filled.normal { background: var(--yellow); border-color: var(--yellow); }
+  .stat-pip.filled.hard { background: var(--red); border-color: var(--red); }
+
+  .item-tag {
+    position: absolute;
+    top: 8px; right: 8px;
+    font-size: 6px;
+    padding: 3px 6px;
+    border: 1px solid;
+  }
+  .item-tag.easy { color: var(--green); border-color: var(--green); }
+  .item-tag.normal { color: var(--yellow); border-color: var(--yellow); }
+  .item-tag.hard { color: var(--red); border-color: var(--red); }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen { padding: 0; }
+
+  /* HUD */
+  .hud {
+    background: #111;
+    border-bottom: 3px solid var(--red);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7px;
+    color: var(--gray);
+  }
+  .hud-score { color: var(--yellow); font-size: 8px; }
+  .hud-target { color: var(--white); font-size: 7px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .hud-mid {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .face-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+  .timer-wrap { flex: 1; }
+  .timer-label { font-size: 6px; color: var(--gray); margin-bottom: 3px; }
+  .timer-bar-outer {
+    height: 14px;
+    background: #333;
+    border: 2px solid var(--gray);
+    position: relative;
+    overflow: hidden;
+  }
+  .timer-bar-inner {
+    height: 100%;
+    background: var(--red);
+    transition: width 0.1s linear, background 0.3s;
+  }
+  .timer-bar-inner.warn { background: var(--yellow); }
+  .timer-bar-inner.ok { background: var(--green); }
+  .timer-text { font-size: 7px; color: var(--white); text-align: right; margin-top: 2px; }
+
+  /* Main game area */
+  .game-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Character area */
+  .char-area {
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 8px;
+    height: 120px;
+    flex-shrink: 0;
+    position: relative;
+    border-bottom: 2px solid #333;
+    overflow: hidden;
+  }
+  .char-canvas {
+    image-rendering: pixelated;
+    width: 100px;
+    height: 100px;
+  }
+  .sweat-particle {
+    position: absolute;
+    font-size: 12px;
+    animation: sweat-float 1s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes sweat-float {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-30px) scale(0.5); }
+  }
+
+  /* Quiz area */
+  .quiz-area {
+    flex: 1;
+    background: var(--dark-gray);
+    border: 2px solid #444;
+    margin: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .quiz-header {
+    background: var(--black);
+    border: 2px solid var(--red);
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .quiz-label { font-size: 7px; color: var(--red); }
+  .quiz-num { font-size: 7px; color: var(--gray); }
+
+  .quiz-prompt {
+    font-size: 8px;
+    color: var(--white);
+    line-height: 2;
+    padding: 4px 0;
+  }
+
+  /* Checkbox type */
+  .quiz-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 8px;
+    border: 2px solid #444;
+    background: #1a1a1a;
+  }
+  .pixel-checkbox {
+    width: 20px; height: 20px;
+    border: 2px solid var(--gray);
+    background: var(--black);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pixel-checkbox.checked { background: var(--red); border-color: var(--red); }
+  .pixel-checkbox.checked::after { content: '✓'; color: white; font-size: 12px; }
+  .checkbox-label { font-size: 8px; color: var(--white); line-height: 1.8; }
+
+  /* Grid type */
+  .quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .grid-cell {
+    aspect-ratio: 1;
+    background: #333;
+    border: 2px solid #555;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    image-rendering: pixelated;
+    transition: border-color 0.1s;
+  }
+  .grid-cell.selected { border-color: var(--red); background: rgba(209,0,0,0.2); }
+  .grid-cell:active { transform: scale(0.95); }
+
+  /* Choice type */
+  .quiz-choices { display: flex; flex-direction: column; gap: 6px; }
+  .choice-btn {
+    background: #1a1a1a;
+    border: 2px solid #444;
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 10px 12px;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.8;
+    transition: border-color 0.1s, background 0.1s;
+  }
+  .choice-btn:active { background: #2a2a2a; }
+  .choice-btn.correct { border-color: var(--green); background: rgba(0,170,0,0.15); color: var(--green); }
+  .choice-btn.wrong { border-color: var(--red); background: rgba(209,0,0,0.15); color: var(--red); }
+
+  /* Text input type */
+  .quiz-text-input {
+    background: #1a1a1a;
+    border: 2px solid var(--gray);
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 10px;
+    width: 100%;
+    outline: none;
+    letter-spacing: 2px;
+  }
+  .quiz-text-input:focus { border-color: var(--yellow); }
+  .submit-btn {
+    background: var(--red);
+    color: var(--white);
+    border: 2px solid var(--white);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 10px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .submit-btn:active { transform: scale(0.98); }
+
+  /* Feedback */
+  .feedback {
+    font-size: 8px;
+    padding: 6px 10px;
+    border: 2px solid;
+    text-align: center;
+    animation: feedback-in 0.2s ease;
+  }
+  @keyframes feedback-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .feedback.ok { color: var(--green); border-color: var(--green); background: rgba(0,170,0,0.1); }
+  .feedback.err { color: var(--red); border-color: var(--red); background: rgba(209,0,0,0.1); }
+
+  /* Next btn */
+  .next-btn {
+    background: var(--dark-gray);
+    border: 2px solid var(--yellow);
+    color: var(--yellow);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 10px;
+    width: 100%;
+    cursor: pointer;
+    display: none;
+  }
+  .next-btn.visible { display: block; }
+
+  /* ===== SOLD OUT OVERLAY ===== */
+  #sold-out-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px;
+  }
+  #sold-out-overlay.active { display: flex; }
+  .sold-out-text {
+    font-size: 28px;
+    color: var(--red);
+    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
+    text-align: center;
+    animation: shake 0.3s ease 3;
+  }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-6px)}
+    75%{transform:translateX(6px)}
+  }
+  .sold-out-sub { font-size: 9px; color: var(--gray); text-align: center; line-height: 2; }
+  .score-display { font-size: 12px; color: var(--yellow); text-align: center; line-height: 2; }
+  .score-label { font-size: 8px; color: var(--gray); }
+
+  /* ===== INITIALS SCREEN ===== */
+  #initials-screen {
+    padding: 20px;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+  }
+  .initials-title { font-size: 12px; color: var(--yellow); text-align: center; line-height: 2; }
+  .initials-sub { font-size: 8px; color: var(--gray); text-align: center; line-height: 2; }
+  .initials-input-wrap { display: flex; gap: 8px; justify-content: center; }
+  .initial-box {
+    width: 48px; height: 56px;
+    background: var(--black);
+    border: 3px solid var(--gray);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    color: var(--white);
+    cursor: pointer;
+  }
+  .initial-box.active { border-color: var(--yellow); }
+  .initial-box.filled { border-color: var(--green); color: var(--green); }
+  .initials-keyboard {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+    width: 100%;
+    max-width: 340px;
+  }
+  .key-btn {
+    background: var(--dark-gray);
+    border: 2px solid #444;
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 8px 0;
+    cursor: pointer;
+    text-align: center;
+  }
+  .key-btn:active { background: #333; transform: scale(0.95); }
+  .key-btn.special { color: var(--yellow); border-color: var(--yellow); }
+  .confirm-btn {
+    background: var(--red);
+    border: 3px solid var(--white);
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 14px;
+    width: 100%;
+    max-width: 280px;
+    cursor: pointer;
+  }
+  .confirm-btn:disabled { background: #444; border-color: #666; color: #666; cursor: not-allowed; }
+
+  /* ===== RANKING SCREEN ===== */
+  #ranking-screen { padding: 16px; gap: 12px; }
+  .ranking-tabs {
+    display: flex;
+    border: 2px solid #444;
+  }
+  .rank-tab {
+    flex: 1;
+    background: var(--dark-gray);
+    border: none;
+    border-right: 1px solid #444;
+    color: var(--gray);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 8px 4px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .rank-tab:last-child { border-right: none; }
+  .rank-tab.active { background: var(--red); color: var(--white); }
+
+  .ranking-table { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--dark-gray);
+    border: 1px solid #333;
+  }
+  .rank-row.top3 { border-color: var(--yellow); }
+  .rank-row.empty { opacity: 0.4; }
+  .rank-pos { font-size: 8px; color: var(--yellow); width: 24px; flex-shrink: 0; }
+  .rank-initials { font-size: 11px; color: var(--white); width: 48px; flex-shrink: 0; letter-spacing: 3px; }
+  .rank-score { font-size: 9px; color: var(--yellow); flex: 1; text-align: right; }
+  .rank-label { font-size: 6px; color: var(--gray); text-align: right; }
+
+  /* Red flash overlay */
+  #flash-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(200,0,0,0.6);
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+  #flash-overlay.flash { opacity: 1; }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #111; }
+  ::-webkit-scrollbar-thumb { background: var(--red); }
+</style>
+</head>
+<body>
+<div id="flash-overlay"></div>
+<div id="game-container">
+
+  <!-- ===== TITLE SCREEN ===== -->
+  <div id="title-screen" class="screen active">
+    <div class="brand-logo">
+      <span class="brand-name">SUPER ME</span>
+      <span class="brand-sub">EST. DROP CULTURE</span>
+    </div>
+    <canvas class="title-pixel-art" id="title-canvas" width="80" height="80"></canvas>
+    <div class="game-title">
+      <div class="main">SUPER ME</div>
+      <div class="main">CHALLENGE</div>
+      <div class="sub" style="margin-top:8px">PROVE YOU DESERVE CHECKOUT</div>
+    </div>
+    <button class="title-btn pixel-shadow blink" onclick="showScreen('item-select')">▶ START GAME</button>
+    <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('ranking-screen'); loadRanking()">🏆 RANKINGS</button>
+  </div>
+
+  <!-- ===== ITEM SELECT ===== -->
+  <div id="item-select" class="screen">
+    <div style="padding:16px; display:flex; flex-direction:column; gap:12px; flex:1;">
+      <div class="screen-header">
+        SELECT ITEM TO PURCHASE
+        <div class="screen-subtitle">CHOOSE WISELY. YOU WILL NOT SUCCEED.</div>
+      </div>
+      <div class="item-cards">
+
+        <div class="item-card easy" onclick="startGame('easy')">
+          <div class="item-tag easy">EASY</div>
+          <div class="item-card-inner">
+            <canvas class="item-pixel" id="item-canvas-easy" width="28" height="28"></canvas>
+            <div class="item-info">
+              <div class="item-name">LOGO DON TEE</div>
+              <div class="item-stats">
+                <div class="stat-row">
+                  <span class="stat-label">HYPE</span>
+                  <div class="stat-bar-wrap">
+                    <div class="stat-pip filled easy"></div>
+                    <div class="stat-pip filled easy"></div>
+                    <div class="stat-pip easy"></div>
+                    <div class="stat-pip easy"></div>
+                    <div class="stat-pip easy"></div>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">PANIC</span>
+                  <div class="stat-bar-wrap">
+                    <div class="stat-pip filled easy"></div>
+                    <div class="stat-pip easy"></div>
+                    <div class="stat-pip easy"></div>
+                    <div class="stat-pip easy"></div>
+                    <div class="stat-pip easy"></div>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">TIME</span>
+                  <span style="color:var(--green);font-size:7px;">45 SEC</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card normal" onclick="startGame('normal')">
+          <div class="item-tag normal">NORMAL</div>
+          <div class="item-card-inner">
+            <canvas class="item-pixel" id="item-canvas-normal" width="28" height="28"></canvas>
+            <div class="item-info">
+              <div class="item-name">BOXLOGO HOODIE</div>
+              <div class="item-stats">
+                <div class="stat-row">
+                  <span class="stat-label">HYPE</span>
+                  <div class="stat-bar-wrap">
+                    <div class="stat-pip filled normal"></div>
+                    <div class="stat-pip filled normal"></div>
+                    <div class="stat-pip filled normal"></div>
+                    <div class="stat-pip filled normal"></div>
+                    <div class="stat-pip normal"></div>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">PANIC</span>
+                  <div class="stat-bar-wrap">
+                    <div class="stat-pip filled normal"></div>
+                    <div class="stat-pip filled normal"></div>
+                    <div class="stat-pip filled normal"></div>
+                    <div class="stat-pip normal"></div>
+                    <div class="stat-pip normal"></div>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">TIME</span>
+                  <span style="color:var(--yellow);font-size:7px;">30 SEC</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="item-card hard" onclick="startGame('hard')">
+          <div class="item-tag hard">HARD</div>
+          <div class="item-card-inner">
+            <canvas class="item-pixel" id="item-canvas-hard" width="28" height="28"></canvas>
+            <div class="item-info">
+              <div class="item-name">LIMITED COLLAB</div>
+              <div class="item-stats">
+                <div class="stat-row">
+                  <span class="stat-label">HYPE</span>
+                  <div class="stat-bar-wrap">
+                    <div class="stat-pip filled hard"></div>
+                    <div class="stat-pip filled hard"></div>
+                    <div class="stat-pip filled hard"></div>
+                    <div class="stat-pip filled hard"></div>
+                    <div class="stat-pip filled hard"></div>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">PANIC</span>
+                  <div class="stat-bar-wrap">
+                    <div class="stat-pip filled hard"></div>
+                    <div class="stat-pip filled hard"></div>
+                    <div class="stat-pip filled hard"></div>
+                    <div class="stat-pip filled hard"></div>
+                    <div class="stat-pip filled hard"></div>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">TIME</span>
+                  <span style="color:var(--red);font-size:7px;">20 SEC</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('title-screen')" style="margin-top:auto;">◀ BACK</button>
+    </div>
+  </div>
+
+  <!-- ===== GAME SCREEN ===== -->
+  <div id="game-screen" class="screen">
+    <div class="hud">
+      <div class="hud-top">
+        <span class="hud-score">SCORE: <span id="hud-score-val">0</span></span>
+        <span class="hud-target" id="hud-target">TARGET: ---</span>
+      </div>
+      <div class="hud-mid">
+        <canvas class="face-icon" id="face-canvas" width="18" height="18"></canvas>
+        <div class="timer-wrap">
+          <div class="timer-label">CHECKOUT WINDOW</div>
+          <div class="timer-bar-outer">
+            <div class="timer-bar-inner ok" id="timer-bar"></div>
+          </div>
+          <div class="timer-text" id="timer-text">45.0s</div>
+        </div>
+      </div>
+    </div>
+    <div class="game-main">
+      <div class="char-area" id="char-area">
+        <canvas class="char-canvas" id="char-canvas" width="50" height="50"></canvas>
+      </div>
+      <div class="quiz-area" id="quiz-area">
+        <!-- quiz injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SOLD OUT OVERLAY ===== -->
+  <div id="sold-out-overlay">
+    <div class="sold-out-text">SOLD OUT</div>
+    <div class="sold-out-sub">TOO SLOW.<br>ANOTHER CUSTOMER<br>COMPLETED CHECKOUT.</div>
+    <div class="score-display">
+      <div class="score-label">VERIFICATIONS CLEARED</div>
+      <div id="final-score-val" style="font-size:24px; color:var(--yellow); margin-top:8px;">0</div>
+    </div>
+    <button class="title-btn pixel-shadow" id="rank-in-btn" onclick="showInitials()">★ RANK IN</button>
+    <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('item-select')">↺ RETRY</button>
+    <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('title-screen')">⌂ TITLE</button>
+  </div>
+
+  <!-- ===== INITIALS SCREEN ===== -->
+  <div id="initials-screen" class="screen">
+    <div class="initials-title">RANK IN!</div>
+    <div class="initials-sub">ENTER YOUR INITIALS</div>
+    <div class="initials-input-wrap">
+      <div class="initial-box active" id="ib0">_</div>
+      <div class="initial-box" id="ib1">_</div>
+      <div class="initial-box" id="ib2">_</div>
+    </div>
+    <div class="initials-keyboard" id="initials-keyboard"></div>
+    <button class="confirm-btn" id="confirm-btn" onclick="submitInitials()" disabled>CONFIRM</button>
+    <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('ranking-screen'); loadRanking()">SKIP → VIEW RANKINGS</button>
+  </div>
+
+  <!-- ===== RANKING SCREEN ===== -->
+  <div id="ranking-screen" class="screen">
+    <div style="padding:16px; display:flex; flex-direction:column; gap:12px; flex:1;">
+      <div class="screen-header">
+        HALL OF FAILED PURCHASES
+        <div class="screen-subtitle">TOP VERIFICATION CLEARERS</div>
+      </div>
+      <div class="ranking-tabs">
+        <button class="rank-tab active" onclick="switchRankTab('easy', this)">LOGO DON<br>TEE</button>
+        <button class="rank-tab" onclick="switchRankTab('normal', this)">BOX LOGO<br>HOODIE</button>
+        <button class="rank-tab" onclick="switchRankTab('hard', this)">LIMITED<br>COLLAB</button>
+      </div>
+      <div class="ranking-table" id="ranking-table"></div>
+      <button class="title-btn secondary pixel-shadow secondary" onclick="showScreen('title-screen')">◀ BACK TO TITLE</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== PIXEL ART DRAWING =====
+function drawPixelArt(canvas, pixels, palette, scale) {
+  const ctx = canvas.getContext('2d');
+  const s = scale || Math.floor(canvas.width / pixels[0].length);
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  pixels.forEach((row, y) => {
+    row.forEach((c, x) => {
+      if (c !== 0) {
+        ctx.fillStyle = palette[c];
+        ctx.fillRect(x * s, y * s, s, s);
+      }
+    });
+  });
+}
+
+const P = {
+  R: '#D10000', DR: '#8B0000', W: '#F0F0F0', B: '#0A0A0A',
+  G: '#888888', DG: '#222222', SK: '#D4956A', DSK: '#A0704A',
+  BL: '#1a1a2e', BK: '#000000', YL: '#FFD700', GR: '#2a8a2a',
+  LG: '#cccccc', NV: '#1a1a4a', RD: '#cc3333',
+};
+
+// Title character: バラクラバ巨漢 (big pixel art)
+function drawTitleChar(canvas) {
+  const pal = {1:P.BK,2:P.G,3:P.W,4:P.YL,5:P.R,6:P.DG,7:P.SK,8:P.GR,9:P.LG};
+  const px = [
+    [0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
+    [0,1,1,2,2,1,1,2,2,1,1,0,0,0,0,0],
+    [0,1,1,2,2,1,1,2,2,1,1,0,0,0,0,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,1,1,3,3,3,3,1,1,0,0,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0],
+    [0,0,5,5,5,5,5,5,5,5,0,0,0,0,0,0],
+    [0,5,5,5,5,5,5,5,5,5,5,0,0,0,0,0],
+    [5,5,5,5,5,5,5,5,5,5,5,5,0,0,0,0],
+    [5,5,5,5,3,5,5,5,3,5,5,5,0,0,0,0],
+    [5,5,5,5,5,5,5,5,5,5,5,5,0,0,0,0],
+    [0,5,5,5,5,5,5,5,5,5,5,0,0,0,0,0],
+    [0,0,6,6,6,6,6,6,6,6,0,0,0,0,0,0],
+    [0,6,6,6,6,6,6,6,6,6,6,0,0,0,0,0],
+    [6,6,6,0,6,6,6,6,0,6,6,6,0,0,0,0],
+  ];
+  drawPixelArt(canvas, px, pal, 5);
+}
+
+// Item: T-shirt
+function drawTee(canvas) {
+  const pal = {1:'#ffffff',2:'#cccccc',3:'#aaaaaa',4:'#D10000',5:'#000000'};
+  const px = [
+    [0,1,1,2,2,2,2,2,2,1,1,0,0,0],
+    [1,1,2,2,2,2,2,2,2,2,1,1,0,0],
+    [2,2,2,2,2,2,2,2,2,2,2,2,0,0],
+    [0,3,3,2,2,2,2,2,2,3,3,0,0,0],
+    [0,0,3,2,2,2,2,2,2,3,0,0,0,0],
+    [0,0,3,2,4,4,4,4,2,3,0,0,0,0],
+    [0,0,3,2,4,5,5,4,2,3,0,0,0,0],
+    [0,0,3,2,4,4,4,4,2,3,0,0,0,0],
+    [0,0,3,2,2,2,2,2,2,3,0,0,0,0],
+    [0,0,3,2,2,2,2,2,2,3,0,0,0,0],
+    [0,0,3,3,3,3,3,3,3,3,0,0,0,0],
+  ];
+  drawPixelArt(canvas, px, pal, 2);
+}
+
+// Item: Hoodie
+function drawHoodie(canvas) {
+  const pal = {1:'#D10000',2:'#8B0000',3:'#ff4444',4:'#ffffff',5:'#000000',6:'#cc0000'};
+  const px = [
+    [0,1,1,2,2,1,1,1,1,2,2,1,1,0],
+    [1,1,2,2,2,1,1,1,1,2,2,2,1,1],
+    [1,1,2,1,1,1,1,1,1,1,1,2,1,1],
+    [0,2,1,1,1,1,1,1,1,1,1,1,2,0],
+    [0,0,2,1,1,1,1,1,1,1,1,2,0,0],
+    [0,0,2,1,4,4,4,4,4,4,1,2,0,0],
+    [0,0,2,1,4,5,5,5,5,4,1,2,0,0],
+    [0,0,2,1,4,5,4,4,5,4,1,2,0,0],
+    [0,0,2,1,4,4,4,4,4,4,1,2,0,0],
+    [0,0,2,1,1,1,1,1,1,1,1,2,0,0],
+    [0,0,2,2,2,2,2,2,2,2,2,2,0,0],
+  ];
+  drawPixelArt(canvas, px, pal, 2);
+}
+
+// Item: Collab (star/special)
+function drawCollab(canvas) {
+  const pal = {1:'#1a1a2e',2:'#4a4a8e',3:'#FFD700',4:'#ffffff',5:'#D10000',6:'#ff8800'};
+  const px = [
+    [0,0,0,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,1,1,2,2,3,2,2,3,2,2,1,1,0],
+    [1,1,2,2,3,3,2,2,3,3,2,2,1,1],
+    [1,1,2,2,2,2,3,3,2,2,2,2,1,1],
+    [1,1,2,5,5,3,3,3,3,5,5,2,1,1],
+    [1,1,2,5,3,3,4,4,3,3,5,2,1,1],
+    [1,1,2,5,5,3,3,3,3,5,5,2,1,1],
+    [1,1,2,2,2,2,3,3,2,2,2,2,1,1],
+    [0,1,1,2,2,2,2,2,2,2,2,1,1,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+  ];
+  drawPixelArt(canvas, px, pal, 2);
+}
+
+// Face sprites
+function drawFace(canvas, state) {
+  // state: 0=calm, 1=worry, 2=sweat, 3=panic
+  const pal = {1:P.BK,2:P.G,3:P.W,4:P.YL,5:P.R,6:'#4488ff'};
+  const faces = [
+    // calm
+    [[0,1,1,1,1,1,0],[1,1,2,1,2,1,1],[1,1,1,1,1,1,1],[1,2,1,1,1,2,1],[1,1,3,3,3,1,1],[0,1,1,1,1,1,0]],
+    // worry
+    [[0,1,1,1,1,1,0],[1,2,1,2,1,2,1],[1,1,2,1,2,1,1],[1,1,1,1,1,1,1],[1,1,3,1,3,1,1],[0,1,3,3,3,1,0]],
+    // sweat
+    [[6,1,1,1,1,1,0],[1,2,1,2,1,2,6],[1,1,2,1,2,1,1],[1,1,1,1,1,1,1],[1,1,1,3,1,1,1],[0,1,3,1,3,1,0]],
+    // panic
+    [[6,1,1,1,1,1,6],[1,2,2,2,2,2,1],[1,1,1,1,1,1,6],[1,5,1,1,1,5,1],[1,1,3,3,3,1,1],[0,5,5,5,5,5,0]],
+  ];
+  drawPixelArt(canvas, faces[state], pal, Math.floor(canvas.width/7));
+}
+
+// Main character (full body, different sweat levels)
+function drawChar(canvas, state) {
+  const pal = {1:P.BK,2:P.G,3:P.W,4:P.R,5:P.SK,6:P.DG,7:'#4488ff',8:P.YL,9:P.GR};
+  // state 0-3 affects sweat particles (drawn separately)
+  const px = [
+    [0,0,1,1,1,1,1,1,0,0],
+    [0,1,1,2,1,1,2,1,1,0],
+    [0,1,1,1,1,1,1,1,1,0],
+    [0,1,2,1,3,3,1,2,1,0],
+    [0,0,1,1,1,1,1,1,0,0],
+    [0,4,4,4,4,4,4,4,4,0],
+    [4,4,4,4,4,4,4,4,4,4],
+    [4,4,3,4,4,4,4,3,4,4],
+    [4,4,4,4,4,4,4,4,4,4],
+    [0,4,4,4,4,4,4,4,4,0],
+    [0,6,6,6,6,6,6,6,6,0],
+    [0,6,6,0,6,6,6,0,6,0],
+    [0,6,0,0,6,6,0,0,6,0],
+  ];
+  // Lean forward when panicking
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (state >= 2) {
+    ctx.save();
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate(state * 0.06);
+    ctx.translate(-canvas.width/2, -canvas.height/2);
+  }
+  drawPixelArt(canvas, px, pal, Math.floor(canvas.width/10));
+  if (state >= 2) ctx.restore();
+}
+
+// ===== GAME STATE =====
+let gameState = {
+  difficulty: 'easy',
+  timeLeft: 45,
+  maxTime: 45,
+  score: 0,
+  timerInterval: null,
+  currentQ: 0,
+  answered: false,
+  lastScore: 0,
+  lastDiff: 'easy',
+  charState: 0,
+  sweatInterval: null,
+};
+
+const DIFF = { easy: 45, normal: 30, hard: 20 };
+const DIFF_NAMES = { easy: 'LOGO DON TEE', normal: 'BOXLOGO HOODIE', hard: 'LIMITED COLLAB' };
+
+// ===== 15 QUESTIONS POOL =====
+const QUESTIONS = [
+  {
+    type: 'checkbox',
+    prompt: 'STEP 1 OF 1:
+CONFIRM YOU ARE NOT A RESELLER',
+    label: 'I AM NOT A RESELLER',
+    answer: true,
+    feedback: 'VERIFICATION REQUIRED. PLEASE COMPLETE ADDITIONAL STEPS.',
+  },
+  {
+    type: 'grid',
+    prompt: 'SELECT ALL SQUARES
+CONTAINING BOX LOGOS',
+    cells: ['🔴','⬛','🔴','🔲','🔴','⬜','🔴','🔲','🟥'],
+    correct: [0,2,4,6],
+    feedback_ok: 'CORRECT. ONE MORE STEP REQUIRED.',
+    feedback_err: 'INCORRECT. TRY AGAIN.',
+  },
+  {
+    type: 'choice',
+    prompt: 'CHOOSE THE CUSTOMER
+MOST LIKELY TO PANIC BUY',
+    choices: ['A NORMAL PERSON','A HYPE BEAST','A LARGE MAN IN A BALACLAVA','A PATIENT ADULT'],
+    correct: 2,
+  },
+  {
+    type: 'text',
+    prompt: 'TYPE THE WORD THAT APPEARED
+BEFORE IT DISAPPEARED:',
+    flash: 'CHECKOUT',
+    answer: 'CHECKOUT',
+  },
+  {
+    type: 'choice',
+    prompt: 'WHAT IS 2 + 3 CARTS?',
+    choices: ['3 CARTS','5 CARTS','TOO MANY','SOLD OUT'],
+    correct: 1,
+  },
+  {
+    type: 'choice',
+    prompt: 'WHICH ITEM HAS THE WORST
+RESALE ETHICS?',
+    choices: ['A BRICK','LOGO DON TEE','RANDOM CHAIR','LIMITED COLLAB DROP'],
+    correct: 3,
+  },
+  {
+    type: 'text',
+    prompt: 'RETYPE IN ALL CAPS:
+NO BACKDOORS',
+    answer: 'NO BACKDOORS',
+  },
+  {
+    type: 'grid',
+    prompt: 'SELECT ALL SQUARES
+WITH HUMAN CUSTOMERS',
+    cells: ['🤖','👤','🤖','👤','🤖','👤','🤖','👤','🤖'],
+    correct: [1,3,5,7],
+    feedback_ok: 'SUSPICIOUS ACTIVITY DETECTED. ONE MORE STEP.',
+    feedback_err: 'BOTS DETECTED. RETRY.',
+  },
+  {
+    type: 'choice',
+    prompt: 'HOW LONG HAVE YOU BEEN
+WAITING IN QUEUE?',
+    choices: ['5 MINUTES','30 MINUTES','3 HOURS','SINCE BIRTH'],
+    correct: 3,
+  },
+  {
+    type: 'checkbox',
+    prompt: 'CONFIRM YOUR INTENT:',
+    label: 'I UNDERSTAND I WILL PROBABLY FAIL',
+    answer: true,
+    feedback: 'NOTED. PROCEED TO NEXT VERIFICATION.',
+  },
+  {
+    type: 'choice',
+    prompt: 'VERIFY YOUR HUMAN HYPE.
+SELECT THE CORRECT DROP DAY:',
+    choices: ['MONDAY','THURSDAY','SUNDAY','FRIDAY'],
+    correct: 2,
+  },
+  {
+    type: 'text',
+    prompt: 'ENTER THE SECRET PHRASE
+TO PROVE HUMANITY:
+SUPER ME IS SOLD OUT',
+    answer: 'SUPER ME IS SOLD OUT',
+  },
+  {
+    type: 'grid',
+    prompt: 'SELECT ALL SQUARES
+SHOWING CHECKOUT BUTTONS',
+    cells: ['🛒','❌','🛒','❌','🛒','❌','❌','🛒','❌'],
+    correct: [0,2,4,7],
+    feedback_ok: 'ALMOST. ONE FINAL STEP.',
+    feedback_err: 'WRONG. THE CART WEEPS.',
+  },
+  {
+    type: 'choice',
+    prompt: 'WHAT IS THE RESALE VALUE
+OF YOUR DIGNITY AFTER
+FAILING THIS CHECKOUT?',
+    choices: ['$0','$0 (FIRM)','NEGATIVE','PRICELESS'],
+    correct: 2,
+  },
+  {
+    type: 'text',
+    prompt: 'ONE LAST STEP.
+TYPE YOUR RESOLVE:',
+    flash: 'ADD TO CART',
+    answer: 'ADD TO CART',
+  },
+];
+
+let shuffledQ = [];
+let qIndex = 0;
+
+function shuffleQuestions() {
+  shuffledQ = [...QUESTIONS].sort(() => Math.random() - 0.5);
+  qIndex = 0;
+}
+
+// ===== SCREEN MANAGEMENT =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('sold-out-overlay').classList.remove('active');
+}
+
+// ===== START GAME =====
+function startGame(diff) {
+  gameState.difficulty = diff;
+  gameState.timeLeft = DIFF[diff];
+  gameState.maxTime = DIFF[diff];
+  gameState.score = 0;
+  gameState.currentQ = 0;
+  gameState.charState = 0;
+  shuffleQuestions();
+
+  document.getElementById('hud-target').textContent = 'TARGET: ' + DIFF_NAMES[diff];
+  document.getElementById('hud-score-val').textContent = '0';
+  updateTimer();
+  showScreen('game-screen');
+
+  if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+  if (gameState.sweatInterval) clearInterval(gameState.sweatInterval);
+
+  gameState.timerInterval = setInterval(tickTimer, 100);
+  gameState.sweatInterval = setInterval(maybeSweat, 800);
+
+  renderQuestion();
+  drawChar(document.getElementById('char-canvas'), 0);
+  drawFace(document.getElementById('face-canvas'), 0);
+}
+
+function tickTimer() {
+  gameState.timeLeft -= 0.1;
+  if (gameState.timeLeft <= 0) {
+    gameState.timeLeft = 0;
+    clearInterval(gameState.timerInterval);
+    clearInterval(gameState.sweatInterval);
+    updateTimer();
+    triggerSoldOut();
+    return;
+  }
+  updateTimer();
+  const pct = gameState.timeLeft / gameState.maxTime;
+  let newCharState = 0;
+  if (pct < 0.15) newCharState = 3;
+  else if (pct < 0.4) newCharState = 2;
+  else if (pct < 0.7) newCharState = 1;
+  if (newCharState !== gameState.charState) {
+    gameState.charState = newCharState;
+    drawChar(document.getElementById('char-canvas'), newCharState);
+    drawFace(document.getElementById('face-canvas'), newCharState);
+  }
+}
+
+function updateTimer() {
+  const pct = gameState.timeLeft / gameState.maxTime;
+  const bar = document.getElementById('timer-bar');
+  bar.style.width = (pct * 100) + '%';
+  bar.className = 'timer-bar-inner';
+  if (pct > 0.5) bar.classList.add('ok');
+  else if (pct > 0.25) bar.classList.add('warn');
+  // red is default (no class needed)
+  document.getElementById('timer-text').textContent = gameState.timeLeft.toFixed(1) + 's';
+}
+
+function maybeSweat() {
+  if (gameState.charState === 0) return;
+  const area = document.getElementById('char-area');
+  const drop = document.createElement('div');
+  drop.className = 'sweat-particle';
+  drop.textContent = gameState.charState >= 3 ? '😭' : '💧';
+  drop.style.left = (20 + Math.random() * 60) + '%';
+  drop.style.top = (10 + Math.random() * 40) + '%';
+  area.appendChild(drop);
+  setTimeout(() => drop.remove(), 1000);
+}
+
+// ===== QUESTION RENDERING =====
+function getNextQ() {
+  const q = shuffledQ[qIndex % shuffledQ.length];
+  qIndex++;
+  // Re-shuffle when we loop
+  if (qIndex % shuffledQ.length === 0) {
+    shuffledQ.sort(() => Math.random() - 0.5);
+  }
+  return q;
+}
+
+function renderQuestion() {
+  const q = getNextQ();
+  gameState.currentQ = q;
+  gameState.answered = false;
+  const area = document.getElementById('quiz-area');
+  const num = gameState.score + 1;
+  let html = `
+    <div class="quiz-header">
+      <span class="quiz-label">PURCHASE VERIFICATION</span>
+      <span class="quiz-num">#${num}</span>
+    </div>
+    <div class="quiz-prompt">${q.prompt.replace(/
+/g,'<br>')}</div>
+  `;
+
+  if (q.type === 'checkbox') {
+    html += `
+      <div class="quiz-checkbox-wrap" onclick="answerCheckbox(this)">
+        <div class="pixel-checkbox" id="pxcb"></div>
+        <span class="checkbox-label">${q.label}</span>
+      </div>
+      <div class="feedback ok" id="fb" style="display:none">${q.feedback}</div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">NEXT STEP ▶</button>
+    `;
+  } else if (q.type === 'grid') {
+    const gridCells = q.cells.map((c, i) =>
+      `<div class="grid-cell" id="gc${i}" onclick="toggleGridCell(${i})">${c}</div>`
+    ).join('');
+    html += `
+      <div class="quiz-grid">${gridCells}</div>
+      <button class="submit-btn" onclick="checkGrid()">VERIFY SELECTION</button>
+      <div class="feedback" id="fb" style="display:none"></div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">NEXT STEP ▶</button>
+    `;
+  } else if (q.type === 'choice') {
+    const choices = q.choices.map((c, i) =>
+      `<button class="choice-btn" onclick="answerChoice(${i}, this)">${String.fromCharCode(65+i)}. ${c}</button>`
+    ).join('');
+    html += `<div class="quiz-choices">${choices}</div>
+      <div class="feedback" id="fb" style="display:none"></div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">NEXT STEP ▶</button>`;
+  } else if (q.type === 'text') {
+    let flashHtml = '';
+    if (q.flash) {
+      flashHtml = `<div id="flash-word" style="font-size:14px;color:var(--yellow);text-align:center;padding:8px;">${q.flash}</div>`;
+      setTimeout(() => {
+        const fw = document.getElementById('flash-word');
+        if (fw) fw.style.visibility = 'hidden';
+      }, 1200);
+    }
+    html += `
+      ${flashHtml}
+      <input class="quiz-text-input" id="text-input" type="text" placeholder="TYPE HERE..." autocomplete="off" autocapitalize="characters">
+      <button class="submit-btn" onclick="checkText()">SUBMIT</button>
+      <div class="feedback" id="fb" style="display:none"></div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">NEXT STEP ▶</button>
+    `;
+  }
+
+  area.innerHTML = html;
+}
+
+// ===== ANSWER HANDLERS =====
+let selectedCells = new Set();
+
+function answerCheckbox(wrap) {
+  if (gameState.answered) return;
+  const cb = document.getElementById('pxcb');
+  cb.classList.toggle('checked');
+  if (cb.classList.contains('checked')) {
+    gameState.answered = true;
+    gameState.score++;
+    document.getElementById('hud-score-val').textContent = gameState.score;
+    document.getElementById('fb').style.display = 'block';
+    showNextBtn();
+  }
+}
+
+function toggleGridCell(i) {
+  if (gameState.answered) return;
+  const cell = document.getElementById('gc' + i);
+  if (selectedCells.has(i)) {
+    selectedCells.delete(i);
+    cell.classList.remove('selected');
+  } else {
+    selectedCells.add(i);
+    cell.classList.add('selected');
+  }
+}
+
+function checkGrid() {
+  if (gameState.answered) return;
+  const q = gameState.currentQ;
+  const fb = document.getElementById('fb');
+  const correct = q.correct.every(i => selectedCells.has(i)) &&
+                  selectedCells.size === q.correct.length;
+  if (correct) {
+    gameState.answered = true;
+    gameState.score++;
+    document.getElementById('hud-score-val').textContent = gameState.score;
+    fb.className = 'feedback ok';
+    fb.textContent = q.feedback_ok || 'CORRECT. NEXT STEP REQUIRED.';
+    fb.style.display = 'block';
+    showNextBtn();
+  } else {
+    fb.className = 'feedback err';
+    fb.textContent = q.feedback_err || 'INCORRECT. TRY AGAIN.';
+    fb.style.display = 'block';
+    selectedCells.clear();
+    document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('selected'));
+  }
+}
+
+function answerChoice(i, el) {
+  if (gameState.answered) return;
+  const q = gameState.currentQ;
+  const fb = document.getElementById('fb');
+  document.querySelectorAll('.choice-btn').forEach(b => b.style.pointerEvents = 'none');
+  if (i === q.correct) {
+    el.classList.add('correct');
+    gameState.answered = true;
+    gameState.score++;
+    document.getElementById('hud-score-val').textContent = gameState.score;
+    fb.className = 'feedback ok';
+    fb.textContent = 'VERIFIED. ONE MORE STEP.';
+    fb.style.display = 'block';
+    showNextBtn();
+  } else {
+    el.classList.add('wrong');
+    fb.className = 'feedback err';
+    fb.textContent = 'WRONG. SUSPICIOUS ACTIVITY DETECTED.';
+    fb.style.display = 'block';
+    setTimeout(() => {
+      document.querySelectorAll('.choice-btn').forEach(b => {
+        b.classList.remove('wrong','correct');
+        b.style.pointerEvents = '';
+      });
+      fb.style.display = 'none';
+    }, 800);
+  }
+}
+
+function checkText() {
+  if (gameState.answered) return;
+  const q = gameState.currentQ;
+  const val = document.getElementById('text-input').value.trim().toUpperCase();
+  const fb = document.getElementById('fb');
+  if (val === q.answer.toUpperCase()) {
+    gameState.answered = true;
+    gameState.score++;
+    document.getElementById('hud-score-val').textContent = gameState.score;
+    fb.className = 'feedback ok';
+    fb.textContent = 'INPUT ACCEPTED. ADDITIONAL VERIFICATION NEEDED.';
+    fb.style.display = 'block';
+    showNextBtn();
+  } else {
+    fb.className = 'feedback err';
+    fb.textContent = 'INCORRECT INPUT. TRY AGAIN.';
+    fb.style.display = 'block';
+  }
+}
+
+function showNextBtn() {
+  const nb = document.getElementById('next-btn');
+  if (nb) nb.classList.add('visible');
+}
+
+function nextQuestion() {
+  selectedCells.clear();
+  renderQuestion();
+}
+
+// ===== SOLD OUT =====
+function triggerSoldOut() {
+  const flash = document.getElementById('flash-overlay');
+  flash.classList.add('flash');
+  setTimeout(() => flash.classList.remove('flash'), 300);
+  setTimeout(() => {
+    document.getElementById('sold-out-overlay').classList.add('active');
+    document.getElementById('final-score-val').textContent = gameState.score;
+    gameState.lastScore = gameState.score;
+    gameState.lastDiff = gameState.difficulty;
+    checkRankEligibility();
+    drawChar(document.getElementById('char-canvas'), 3);
+  }, 400);
+}
+
+function checkRankEligibility() {
+  const scores = getScores(gameState.difficulty);
+  const btn = document.getElementById('rank-in-btn');
+  if (scores.length < 10 || gameState.score > scores[scores.length-1].score) {
+    btn.style.display = 'block';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+// ===== RANKINGS (localStorage) =====
+function getScores(diff) {
+  try {
+    return JSON.parse(localStorage.getItem('smc_scores_' + diff) || '[]');
+  } catch(e) { return []; }
+}
+
+function saveScore(diff, initials, score) {
+  let scores = getScores(diff);
+  scores.push({ initials, score, ts: Date.now() });
+  scores.sort((a,b) => b.score - a.score || a.ts - b.ts);
+  scores = scores.slice(0, 10);
+  localStorage.setItem('smc_scores_' + diff, JSON.stringify(scores));
+}
+
+function loadRanking(diff) {
+  diff = diff || 'easy';
+  const table = document.getElementById('ranking-table');
+  const scores = getScores(diff);
+  const TITLES = ['HYPE KING','QUEUE LORD','CART GOBLIN','MANUAL COP','LAST HUMAN','BOT SUSPECT','REFRESH MONKEY','QUEUE GHOST','SLOW CLICKER','SOLD OUT SOUL'];
+  let html = '';
+  for (let i = 0; i < 10; i++) {
+    const s = scores[i];
+    const isTop3 = i < 3;
+    if (s) {
+      html += `<div class="rank-row${isTop3?' top3':''}">
+        <span class="rank-pos">${i+1}.</span>
+        <span class="rank-initials">${s.initials}</span>
+        <div style="flex:1;">
+          <div class="rank-score">${s.score} VER.</div>
+          <div class="rank-label">${TITLES[i]||''}</div>
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="rank-row empty">
+        <span class="rank-pos">${i+1}.</span>
+        <span class="rank-initials">---</span>
+        <div style="flex:1;"><div class="rank-score">-</div></div>
+      </div>`;
+    }
+  }
+  table.innerHTML = html;
+}
+
+function switchRankTab(diff, el) {
+  document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadRanking(diff);
+}
+
+// ===== INITIALS =====
+let initialsArr = ['','',''];
+let initPos = 0;
+
+function showInitials() {
+  initialsArr = ['','',''];
+  initPos = 0;
+  document.getElementById('sold-out-overlay').classList.remove('active');
+  showScreen('initials-screen');
+  renderInitialBoxes();
+  renderKeyboard();
+}
+
+function renderInitialBoxes() {
+  for (let i = 0; i < 3; i++) {
+    const box = document.getElementById('ib' + i);
+    box.textContent = initialsArr[i] || '_';
+    box.className = 'initial-box';
+    if (i === initPos) box.classList.add('active');
+    if (initialsArr[i]) box.classList.add('filled');
+  }
+  document.getElementById('confirm-btn').disabled = initialsArr.some(c => !c);
+}
+
+function renderKeyboard() {
+  const keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('').concat(['DEL','OK']);
+  const kb = document.getElementById('initials-keyboard');
+  kb.innerHTML = keys.map(k =>
+    `<button class="key-btn${k==='DEL'||k==='OK'?' special':''}" onclick="pressKey('${k}')">${k}</button>`
+  ).join('');
+}
+
+function pressKey(k) {
+  if (k === 'DEL') {
+    if (initPos > 0) initPos--;
+    initialsArr[initPos] = '';
+  } else if (k === 'OK') {
+    submitInitials();
+    return;
+  } else {
+    if (initPos < 3) {
+      initialsArr[initPos] = k;
+      initPos = Math.min(initPos + 1, 3);
+    }
+  }
+  initPos = Math.max(0, Math.min(initPos, 2));
+  if (initialsArr[initPos]) initPos = Math.min(initPos + 1, 3);
+  renderInitialBoxes();
+}
+
+function submitInitials() {
+  const ini = initialsArr.join('');
+  if (ini.length < 3) return;
+  saveScore(gameState.lastDiff, ini, gameState.lastScore);
+  showScreen('ranking-screen');
+  loadRanking(gameState.lastDiff);
+  // Highlight matching tab
+  const tabs = document.querySelectorAll('.rank-tab');
+  const idx = ['easy','normal','hard'].indexOf(gameState.lastDiff);
+  tabs.forEach((t,i) => t.classList.toggle('active', i === idx));
+}
+
+// ===== INIT PIXEL ART =====
+window.addEventListener('load', () => {
+  drawTitleChar(document.getElementById('title-canvas'));
+  drawTee(document.getElementById('item-canvas-easy'));
+  drawHoodie(document.getElementById('item-canvas-normal'));
+  drawCollab(document.getElementById('item-canvas-hard'));
+});
+</script>
+</body>
+</html>
