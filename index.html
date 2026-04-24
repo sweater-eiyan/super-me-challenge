@@ -990,16 +990,14 @@ const DIFF_NAMES = { easy: 'LOGO DON TEE', normal: 'BOXLOGO HOODIE', hard: 'LIMI
 const QUESTIONS = [
   {
     type: 'checkbox',
-    prompt: 'STEP 1 OF 1:
-CONFIRM YOU ARE NOT A RESELLER',
+    prompt: 'STEP 1 OF 1:\nCONFIRM YOU ARE NOT A RESELLER',
     label: 'I AM NOT A RESELLER',
     answer: true,
     feedback: 'VERIFICATION REQUIRED. PLEASE COMPLETE ADDITIONAL STEPS.',
   },
   {
     type: 'grid',
-    prompt: 'SELECT ALL SQUARES
-CONTAINING BOX LOGOS',
+    prompt: 'SELECT ALL SQUARES\nCONTAINING BOX LOGOS',
     cells: ['🔴','⬛','🔴','🔲','🔴','⬜','🔴','🔲','🟥'],
     correct: [0,2,4,6],
     feedback_ok: 'CORRECT. ONE MORE STEP REQUIRED.',
@@ -1007,15 +1005,13 @@ CONTAINING BOX LOGOS',
   },
   {
     type: 'choice',
-    prompt: 'CHOOSE THE CUSTOMER
-MOST LIKELY TO PANIC BUY',
+    prompt: 'CHOOSE THE CUSTOMER\nMOST LIKELY TO PANIC BUY',
     choices: ['A NORMAL PERSON','A HYPE BEAST','A LARGE MAN IN A BALACLAVA','A PATIENT ADULT'],
     correct: 2,
   },
   {
     type: 'text',
-    prompt: 'TYPE THE WORD THAT APPEARED
-BEFORE IT DISAPPEARED:',
+    prompt: 'TYPE THE WORD THAT APPEARED\nBEFORE IT DISAPPEARED:',
     flash: 'CHECKOUT',
     answer: 'CHECKOUT',
   },
@@ -1027,21 +1023,18 @@ BEFORE IT DISAPPEARED:',
   },
   {
     type: 'choice',
-    prompt: 'WHICH ITEM HAS THE WORST
-RESALE ETHICS?',
+    prompt: 'WHICH ITEM HAS THE WORST\nRESALE ETHICS?',
     choices: ['A BRICK','LOGO DON TEE','RANDOM CHAIR','LIMITED COLLAB DROP'],
     correct: 3,
   },
   {
     type: 'text',
-    prompt: 'RETYPE IN ALL CAPS:
-NO BACKDOORS',
+    prompt: 'RETYPE IN ALL CAPS:\nNO BACKDOORS',
     answer: 'NO BACKDOORS',
   },
   {
     type: 'grid',
-    prompt: 'SELECT ALL SQUARES
-WITH HUMAN CUSTOMERS',
+    prompt: 'SELECT ALL SQUARES\nWITH HUMAN CUSTOMERS',
     cells: ['🤖','👤','🤖','👤','🤖','👤','🤖','👤','🤖'],
     correct: [1,3,5,7],
     feedback_ok: 'SUSPICIOUS ACTIVITY DETECTED. ONE MORE STEP.',
@@ -1049,8 +1042,7 @@ WITH HUMAN CUSTOMERS',
   },
   {
     type: 'choice',
-    prompt: 'HOW LONG HAVE YOU BEEN
-WAITING IN QUEUE?',
+    prompt: 'HOW LONG HAVE YOU BEEN\nWAITING IN QUEUE?',
     choices: ['5 MINUTES','30 MINUTES','3 HOURS','SINCE BIRTH'],
     correct: 3,
   },
@@ -1063,22 +1055,18 @@ WAITING IN QUEUE?',
   },
   {
     type: 'choice',
-    prompt: 'VERIFY YOUR HUMAN HYPE.
-SELECT THE CORRECT DROP DAY:',
+    prompt: 'VERIFY YOUR HUMAN HYPE.\nSELECT THE CORRECT DROP DAY:',
     choices: ['MONDAY','THURSDAY','SUNDAY','FRIDAY'],
     correct: 2,
   },
   {
     type: 'text',
-    prompt: 'ENTER THE SECRET PHRASE
-TO PROVE HUMANITY:
-SUPER ME IS SOLD OUT',
+    prompt: 'ENTER THE SECRET PHRASE\nTO PROVE HUMANITY:\nSUPER ME IS SOLD OUT',
     answer: 'SUPER ME IS SOLD OUT',
   },
   {
     type: 'grid',
-    prompt: 'SELECT ALL SQUARES
-SHOWING CHECKOUT BUTTONS',
+    prompt: 'SELECT ALL SQUARES\nSHOWING CHECKOUT BUTTONS',
     cells: ['🛒','❌','🛒','❌','🛒','❌','❌','🛒','❌'],
     correct: [0,2,4,7],
     feedback_ok: 'ALMOST. ONE FINAL STEP.',
@@ -1086,16 +1074,13 @@ SHOWING CHECKOUT BUTTONS',
   },
   {
     type: 'choice',
-    prompt: 'WHAT IS THE RESALE VALUE
-OF YOUR DIGNITY AFTER
-FAILING THIS CHECKOUT?',
+    prompt: 'WHAT IS THE RESALE VALUE\nOF YOUR DIGNITY AFTER\nFAILING THIS CHECKOUT?',
     choices: ['$0','$0 (FIRM)','NEGATIVE','PRICELESS'],
     correct: 2,
   },
   {
     type: 'text',
-    prompt: 'ONE LAST STEP.
-TYPE YOUR RESOLVE:',
+    prompt: 'ONE LAST STEP.\nTYPE YOUR RESOLVE:',
     flash: 'ADD TO CART',
     answer: 'ADD TO CART',
   },
