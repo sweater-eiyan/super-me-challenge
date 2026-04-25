@@ -542,14 +542,15 @@ function loadRanking(diff){
     }
     var box=document.getElementById('ranklist');if(box)box.innerHTML=h;
   }
-  var local=getScores(d);
-  renderList(local);
+  var box=document.getElementById('ranklist');
+  if(box)box.innerHTML='<div class="rrow empty" style="justify-content:center;letter-spacing:.1em;opacity:.5">LOADING...</div>';
   fetch(WORKER_URL+'/rankings?difficulty='+d)
     .then(function(r){return r.json();})
     .then(function(data){
-      if(data&&data.ok&&Array.isArray(data.rankings))renderList(data.rankings);
+      if(data&&data.ok&&Array.isArray(data.rankings)) renderList(data.rankings);
+      else renderList(getScores(d));
     })
-    .catch(function(){});
+    .catch(function(){ renderList(getScores(d)); });
 }
 
 function switchTab(d,btn){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');loadRanking(d);}
