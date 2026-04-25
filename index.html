@@ -405,7 +405,7 @@ var QS=[
   {id:'odo3',type:'grid',title:'Select the one that does NOT belong',cells:['👨\u200d🔧','👨\u200d🚒','👨\u200d🍳','🤵\u200d♂️','👨\u200d🔧','🍠','👨\u200d🚒','👨\u200d🍳','🤵\u200d♂️'],correct:[5]}
 ];
 
-function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='none';});var el=document.getElementById(id);if(!el)return;el.classList.add('active');el.style.display='flex';closeOverlay();if(id==='select-screen'){if(typeof renderGrid==='function')renderGrid();if(typeof updateChips==='function')updateChips();}if(id==='ranking-screen'){if(typeof loadRanking==='function')loadRanking((typeof currentLevel!=='undefined'&&currentLevel)||G.lastDiff||'easy');}}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='none';});var el=document.getElementById(id);if(!el)return;el.classList.add('active');el.style.display='flex';closeOverlay();if(id==='select-screen'){if(typeof renderGrid==='function')renderGrid();if(typeof updateChips==='function')updateChips();}}
 function closeOverlay(){var s=document.getElementById('soldout');if(s)s.classList.remove('active');}
 
 
@@ -527,30 +527,31 @@ function soldOut(){
 // ===== RANKING =====
 function getScores(d){try{return JSON.parse(localStorage.getItem('smc_'+d)||'[]');}catch(e){return[];}}
 function saveScore(d,ini,sc){var l=getScores(d);l.push({ini:ini,score:sc,ts:Date.now()});l.sort(function(a,b){return b.score-a.score||a.ts-b.ts;});localStorage.setItem('smc_'+d,JSON.stringify(l.slice(0,10)));}
-function loadRanking(diff){
-  var d=diff||'easy'; currentLevel=d;
+function renderRankList(list,diff){
+  var d=diff||currentLevel||'easy';
   ['easy','normal','hard'].forEach(function(k){
     var el=document.getElementById('tab-'+k);
     if(el)el.className='tab'+(k===d?' act':'');
   });
-  function renderList(list){
-    var h='';
-    for(var i=0;i<10;i++){
-      var row=list[i];
-      if(row){h+='<div class="rrow'+(i<3?' top':'')+'"><div class="rpos">'+(i+1)+'.</div><div class="rini">'+(row.name||row.ini||'???')+'</div><div class="rmeta"><div class="rscore">'+row.score+' VER.</div><div class="rtitle">'+(TITLES[i]||'')+'</div></div></div>';}
-      else{h+='<div class="rrow empty"><div class="rpos">'+(i+1)+'.</div><div class="rini">---</div><div class="rmeta"><div class="rscore">-</div><div class="rtitle">NO DATA</div></div></div>';}
-    }
-    var box=document.getElementById('ranklist');if(box)box.innerHTML=h;
+  var h='';
+  for(var i=0;i<10;i++){
+    var row=list[i];
+    if(row){h+='<div class="rrow'+(i<3?' top':'')+'"><div class="rpos">'+(i+1)+'.</div><div class="rini">'+(row.name||row.ini||'???')+'</div><div class="rmeta"><div class="rscore">'+row.score+' VER.</div><div class="rtitle">'+(TITLES[i]||'')+'</div></div></div>';}
+    else{h+='<div class="rrow empty"><div class="rpos">'+(i+1)+'.</div><div class="rini">---</div><div class="rmeta"><div class="rscore">-</div><div class="rtitle">NO DATA</div></div></div>';}
   }
+  var box=document.getElementById('ranklist');if(box)box.innerHTML=h;
+}
+function loadRanking(diff){
+  var d=diff||'easy'; currentLevel=d;
   var box=document.getElementById('ranklist');
-  if(box)box.innerHTML='<div class="rrow empty" style="justify-content:center;letter-spacing:.1em;opacity:.5">LOADING...</div>';
+  if(box)box.innerHTML='<div style="text-align:center;padding:20px;letter-spacing:.1em;opacity:.5">LOADING...</div>';
   fetch(WORKER_URL+'/rankings?difficulty='+d)
     .then(function(r){return r.json();})
     .then(function(data){
-      if(data&&data.ok&&Array.isArray(data.rankings)) renderList(data.rankings);
-      else renderList(getScores(d));
+      if(data&&data.ok&&Array.isArray(data.rankings)) renderRankList(data.rankings,d);
+      else renderRankList(getScores(d),d);
     })
-    .catch(function(){ renderList(getScores(d)); });
+    .catch(function(){ renderRankList(getScores(d),d); });
 }
 
 function switchTab(d,btn){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');loadRanking(d);}
@@ -588,31 +589,23 @@ function pressKey(k){
 function submitInitials(){
   if(G.initials.some(function(v){return !v;}))return;
   var name=G.initials.join('');
-  saveScore(G.lastDiff,name,G.lastScore);
+  var diff=G.lastDiff;
+  var score=G.lastScore;
+  saveScore(diff,name,score);
   showScreen('ranking-screen');
-  loadRanking(G.lastDiff);
+  loadRanking(diff);
   fetch(WORKER_URL+'/submit',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({difficulty:G.lastDiff,name:name,score:G.lastScore})
+    body:JSON.stringify({difficulty:diff,name:name,score:score})
   })
   .then(function(r){return r.json();})
   .then(function(data){
-    if(data&&data.ok&&Array.isArray(data.rankings)){
-      function renderList(list){
-        var h='';
-        for(var i=0;i<10;i++){
-          var row=list[i];
-          if(row){h+='<div class="rrow'+(i<3?' top':'')+'"><div class="rpos">'+(i+1)+'.</div><div class="rini">'+(row.name||row.ini||'???')+'</div><div class="rmeta"><div class="rscore">'+row.score+' VER.</div><div class="rtitle">'+(TITLES[i]||'')+'</div></div></div>';}
-          else{h+='<div class="rrow empty"><div class="rpos">'+(i+1)+'.</div><div class="rini">---</div><div class="rmeta"><div class="rscore">-</div><div class="rtitle">NO DATA</div></div></div>';}
-        }
-        var box=document.getElementById('ranklist');if(box)box.innerHTML=h;
-      }
-      renderList(data.rankings);
-    }
+    if(data&&data.ok&&Array.isArray(data.rankings)) renderRankList(data.rankings,diff);
   })
   .catch(function(){});
 }
+
 
 // ===== INIT =====
 
