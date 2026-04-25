@@ -346,15 +346,14 @@ var WS_TOTAL = 4; // 10:59:56 → 11:00:00 = 4 seconds
 var WS_START_SEC = 59*60+56; // seconds from midnight for 10:59:56
 
 function enterWaitScreen(diff){
-  var d = DIFF[diff]||DIFF['easy'];
-  var el = document.getElementById('wsItemName');
-  if(el) el.textContent = d.name;
+  var cEl=document.getElementById('wsClock');
+  if(cEl)cEl.innerHTML='10:59:<span id="wsSecSpan" class="ws-sec">56</span>';
+  var bEl=document.getElementById('wsBar');if(bEl)bEl.style.width='0%';
+  var d=DIFF[diff]||DIFF['easy'];
+  var iEl=document.getElementById('wsItemName');if(iEl)iEl.textContent=d.name;
   showScreen('wait-screen');
-  document.getElementById('wsBar').style.width='0%';
-  document.getElementById('wsSecSpan').textContent='56';
   startWaitTimer(diff);
 }
-
 function startWaitTimer(diff){
   var elapsed=0;
   var total=WS_TOTAL*10; // ticks of 100ms
@@ -375,7 +374,7 @@ function startWaitTimer(diff){
         var clockEl=document.getElementById('wsClock');
         if(clockEl) clockEl.innerHTML='11:<span class="ws-sec">00</span>:00';
       }
-      setTimeout(function(){var ws=document.getElementById('wait-screen');if(ws){ws.classList.remove('active');ws.style.display='none';}startGame(diff);},120);
+      setTimeout(function(){var ws=document.getElementById('wait-screen');if(ws){ws.classList.remove('active');ws.style.removeProperty('display');}startGame(diff);},120);
     }
   },100);
 }
