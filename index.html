@@ -149,8 +149,8 @@ body{display:flex;justify-content:center}
   <div class="hero-wrap"><canvas id="titleCanvas" width="380" height="230"></canvas></div>
   <div class="title-text"><h1>SUPER ME<br>CHALLENGE</h1><p>PROVE YOU DESERVE CHECKOUT</p></div>
   <div class="title-actions">
-    <button class="pbtn" onclick="goto('select-screen')">START GAME</button>
-    <button class="pbtn sec" onclick="goto('ranking-screen');loadRanking('easy')">RANKINGS</button>
+    <button class="pbtn" onclick="showScreen('select-screen')">START GAME</button>
+    <button class="pbtn sec" onclick="showScreen('ranking-screen');loadRanking('easy')">RANKINGS</button>
   </div>
 </section>
 
@@ -189,7 +189,7 @@ body{display:flex;justify-content:center}
       </div>
     </div>
   </div>
-  <div class="back-row"><button class="pbtn sec" onclick="goto('title-screen')">BACK</button></div>
+  <div class="back-row"><button class="pbtn sec" onclick="showScreen('title-screen')">BACK</button></div>
 </section>
 
 <!-- GAME -->
@@ -216,7 +216,7 @@ body{display:flex;justify-content:center}
   <div class="iboxes"><div id="ib0" class="ibox active">_</div><div id="ib1" class="ibox">_</div><div id="ib2" class="ibox">_</div></div>
   <div id="kbd" class="kbd"></div>
   <button id="cfmbtn" class="cfmbtn" disabled onclick="submitInitials()">CONFIRM</button>
-  <button class="pbtn sec" onclick="goto('ranking-screen');loadRanking(G.lastDiff)">SKIP</button>
+  <button class="pbtn sec" onclick="showScreen('ranking-screen');loadRanking(G.lastDiff)">SKIP</button>
 </section>
 
 <!-- RANKING -->
@@ -230,7 +230,7 @@ body{display:flex;justify-content:center}
     </div>
     <div id="ranklist" class="ranklist"></div>
     <div class="rank-note">SCORES SAVED LOCALLY</div>
-    <button class="pbtn sec" onclick="goto('title-screen')">BACK TO TITLE</button>
+    <button class="pbtn sec" onclick="showScreen('title-screen')">BACK TO TITLE</button>
   </div>
 </section>
 
@@ -244,7 +244,7 @@ body{display:flex;justify-content:center}
     <div class="modal-actions">
       <button id="rankInBtn" class="pbtn" onclick="showInitials()">RANK IN</button>
       <button class="pbtn sec" onclick="closeOverlay();startGame(G.diff)">RETRY</button>
-      <button class="pbtn sec" onclick="closeOverlay();goto('title-screen')">TITLE</button>
+      <button class="pbtn sec" onclick="closeOverlay();showScreen('title-screen')">TITLE</button>
     </div>
   </div>
 </div>
@@ -264,7 +264,7 @@ var QS=[
   {id:'m4',type:'choice',title:'What is 10 - 1?',choices:['7','8','9','10'],correct:2}
 ];
 
-function goto(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');closeOverlay();}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');closeOverlay();}
 function closeOverlay(){document.getElementById('soldout').classList.remove('active');}
 
 // ===== PIXEL ART =====
@@ -446,15 +446,16 @@ function startGame(diff){
   document.getElementById('scoreVal').textContent='0';
   document.getElementById('targetLbl').textContent='TARGET: '+d.name;
   updateTimer(); drawFace(0); drawScene(0);
-  goto('game-screen'); renderQ();
+  showScreen('game-screen'); renderQ();
   clearInterval(G.timer); clearInterval(G.swTimer);
-  G.timer=setInterval(tick,100);
+  sndStart(); G.timer=setInterval(tick,100);
   G.swTimer=setInterval(emitSweat,900);
 }
 function tick(){
   G.timeLeft=Math.max(0,G.timeLeft-0.1); updateTimer();
   var p=G.timeLeft/G.maxTime; var st=p<0.12?3:p<0.35?2:p<0.68?1:0;
   if(st!==G.charState){G.charState=st;drawFace(st);drawScene(st);}
+  if(G.charState>=2 && Math.abs(G.timeLeft-Math.round(G.timeLeft))<0.06){sndTick();}
   if(G.timeLeft<=0){clearInterval(G.timer);clearInterval(G.swTimer);soldOut();}
 }
 function updateTimer(){
@@ -512,14 +513,14 @@ function tapCell(i){
 function submitGrid(){
   var q=G.current; var correct=q.correct; var ok=(correct.length===G.selected.size)&&correct.every(function(v){return G.selected.has(v);});
   var fb=document.getElementById('fb');
-  if(ok){fb.className='feedback ok';fb.textContent='Correct. Proceed.';addScore();autoNext();}
-  else{fb.className='feedback ng';fb.textContent='Incorrect selection. Please try again.';}
+  if(ok){fb.className='feedback ok';fb.textContent='Correct. Proceed.';sndCorrect();addScore();autoNext();}
+  else{fb.className='feedback ng';fb.textContent='Incorrect selection. Please try again.';sndWrong();}
 }
 function tapChoice(idx,el){
   document.querySelectorAll('.chbtn').forEach(function(b){b.disabled=true;});
   var fb=document.getElementById('fb');
-  if(idx===G.current.correct){el.classList.add('ok');fb.className='feedback ok';fb.textContent='Correct. Proceed.';addScore();autoNext();}
-  else{el.classList.add('ng');document.querySelectorAll('.chbtn')[G.current.correct].classList.add('ok');fb.className='feedback ng';fb.textContent='Incorrect. Try again.';}
+  if(idx===G.current.correct){el.classList.add('ok');fb.className='feedback ok';fb.textContent='Correct. Proceed.';sndCorrect();addScore();autoNext();}
+  else{el.classList.add('ng');document.querySelectorAll('.chbtn')[G.current.correct].classList.add('ok');fb.className='feedback ng';fb.textContent='Incorrect. Try again.';sndWrong();}
 }
 
 // ===== SOLD OUT =====
@@ -531,7 +532,7 @@ function soldOut(){
     document.getElementById('finalScore').textContent=String(G.score);
     var scores=getScores(G.diff);
     document.getElementById('rankInBtn').style.display=(scores.length<10||(scores.length>0&&G.score>scores[scores.length-1].score))?'block':'none';
-    document.getElementById('soldout').classList.add('active');
+    sndSoldOut(); document.getElementById('soldout').classList.add('active');
     drawFace(3); drawScene(3);
   },320);
 }
@@ -547,14 +548,21 @@ function loadRanking(diff){
 function switchTab(d,btn){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');loadRanking(d);}
 
 // ===== INITIALS =====
-function showInitials(){closeOverlay();goto('initials-screen');G.initials=['','',''];G.iPos=0;renderIboxes();buildKbd();}
+function showInitials(){closeOverlay();showScreen('initials-screen');G.initials=['','',''];G.iPos=0;renderIboxes();buildKbd();}
 function renderIboxes(){
   for(var i=0;i<3;i++){var el=document.getElementById('ib'+i);el.textContent=G.initials[i]||'_';el.className='ibox'+(i===G.iPos?' active':'')+(G.initials[i]?' filled':'');}
   document.getElementById('cfmbtn').disabled=G.initials.some(function(v){return !v;});
 }
 function buildKbd(){
   var keys='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('').concat(['DEL','OK']);
-  document.getElementById('kbd').innerHTML=keys.map(function(k){return '<button class="key'+((k==='DEL'||k==='OK')?' sp':'')+'" onclick="pressKey(''+k+'')">'+k+'</button>';}).join('');
+  var box=document.getElementById('kbd'); box.innerHTML='';
+  keys.forEach(function(k){
+    var btn=document.createElement('button');
+    btn.className='key'+((k==='DEL'||k==='OK')?' sp':'');
+    btn.textContent=k;
+    btn.onclick=function(){pressKey(k);};
+    box.appendChild(btn);
+  });
 }
 function pressKey(k){
   if(k==='DEL'){if(G.initials[G.iPos]){G.initials[G.iPos]='';}else if(G.iPos>0){G.iPos--;G.initials[G.iPos]='';}}
@@ -562,7 +570,7 @@ function pressKey(k){
   else{G.initials[G.iPos]=k;if(G.iPos<2)G.iPos++;}
   renderIboxes();
 }
-function submitInitials(){if(G.initials.some(function(v){return !v;}))return;saveScore(G.lastDiff,G.initials.join(''),G.lastScore);goto('ranking-screen');var diffs=['easy','normal','hard'];var idx=diffs.indexOf(G.lastDiff);document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',i===idx);});loadRanking(G.lastDiff);}
+function submitInitials(){if(G.initials.some(function(v){return !v;}))return;saveScore(G.lastDiff,G.initials.join(''),G.lastScore);showScreen('ranking-screen');var diffs=['easy','normal','hard'];var idx=diffs.indexOf(G.lastDiff);document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',i===idx);});loadRanking(G.lastDiff);}
 
 // ===== INIT =====
 window.addEventListener('load',function(){
@@ -576,6 +584,29 @@ window.addEventListener('load',function(){
   drawTitleScene();
   buildKbd(); loadRanking('easy');
 });
+
+// ===== SOUND =====
+var AC=null;
+function getAC(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function beep(freq,dur,type,vol,decay){
+  var ac=getAC(); if(!ac)return;
+  var o=ac.createOscillator(); var g=ac.createGain();
+  o.connect(g); g.connect(ac.destination);
+  o.type=type||'square'; o.frequency.setValueAtTime(freq,ac.currentTime);
+  g.gain.setValueAtTime((vol||0.18),ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+(dur||0.12));
+  o.start(ac.currentTime); o.stop(ac.currentTime+(dur||0.12)+(decay||0));
+}
+function sndCorrect(){beep(440,.06,'square',.15);setTimeout(function(){beep(660,.08,'square',.12);},70);}
+function sndWrong(){beep(220,.08,'sawtooth',.18);setTimeout(function(){beep(180,.1,'sawtooth',.14);},90);}
+function sndTick(){beep(800,.03,'square',.06);}
+function sndCheckbox(){beep(528,.05,'sine',.14);setTimeout(function(){beep(792,.08,'sine',.10);},60);}
+function sndSoldOut(){
+  beep(140,.25,'sawtooth',.22);
+  setTimeout(function(){beep(100,.35,'sawtooth',.22);},260);
+  setTimeout(function(){beep(80,.5,'sawtooth',.18);},620);
+}
+function sndStart(){beep(330,.05,'square',.10);setTimeout(function(){beep(440,.05,'square',.10);},60);setTimeout(function(){beep(660,.08,'square',.12);},120);}
 </script>
 </body>
 </html>
