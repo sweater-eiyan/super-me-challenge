@@ -387,7 +387,7 @@ function renderQ(){
     h+='<div id="fb" class="feedback"></div>';
   } else if(q.type==='grid'){
     h+='<div class="qtitle">'+q.title+'</div><div class="grid">';
-    for(var i=0;i<q.cells.length;i++){h+='<button type="button" class="cell" id="cell-'+i+'" onclick="tapCell('+i+',event)" aria-pressed="false">'+q.cells[i]+'</button>';}
+    for(var i=0;i<q.cells.length;i++){h+='<button type="button" class="cell" id="cell-'+i+'" onpointerdown="tapCell('+i+',event)" onclick="event.preventDefault()" aria-pressed="false">'+q.cells[i]+'</button>';}
     h+='</div><button class="verifybtn" onclick="submitGrid()">VERIFY</button>';
     h+='<div id="fb" class="feedback"></div>';
   } else if(q.type==='choice'){
@@ -403,13 +403,7 @@ function tapRobot(){
   var fb=document.getElementById('fb'); fb.className='feedback ok'; fb.textContent='Verification complete. Additional checks may follow.';
   addScore(); autoNext();
 }
-function tapCell(i,e){var el=document.getElementById('cell-'+i);if(!el)return;el.classList.add('hit');setTimeout(function(){if(el)el.classList.remove('hit');},70);if(G.selected.has(i)){G.selected.delete(i);el.classList.remove('sel');el.setAttribute('aria-pressed','false');}else{G.selected.add(i);el.classList.add('sel');el.setAttribute('aria-pressed','true');}if(e&&typeof e.preventDefault==='function')e.preventDefault();}
-function submitGrid(){
-  var q=G.current; var correct=q.correct; var ok=(correct.length===G.selected.size)&&correct.every(function(v){return G.selected.has(v);});
-  var fb=document.getElementById('fb');
-  if(ok){fb.className='feedback ok';fb.textContent='Correct. Proceed.';sndCorrect();addScore();autoNext();}
-  else{fb.className='feedback ng';fb.textContent='Incorrect selection. Please try again.';sndWrong();}
-}
+function tapCell(i,e){var el=document.getElementById('cell-'+i);if(!el)return;if(e&&typeof e.preventDefault==='function')e.preventDefault();var now=Date.now();var last=Number(el.dataset.ts||0);if(now-last<120)return;el.dataset.ts=String(now);el.classList.add('hit');setTimeout(function(){if(el)el.classList.remove('hit');},70);if(G.selected.has(i)){G.selected.delete(i);el.classList.remove('sel');el.setAttribute('aria-pressed','false');}else{G.selected.add(i);el.classList.add('sel');el.setAttribute('aria-pressed','true');}}
 function tapChoice(idx,el){
   document.querySelectorAll('.chbtn').forEach(function(b){b.disabled=true;});
   var fb=document.getElementById('fb');
