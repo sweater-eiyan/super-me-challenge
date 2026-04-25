@@ -346,6 +346,7 @@ var WS_TOTAL = 4; // 10:59:56 → 11:00:00 = 4 seconds
 var WS_START_SEC = 59*60+56; // seconds from midnight for 10:59:56
 
 function enterWaitScreen(diff){
+  clearInterval(G.wsTimer);
   var cEl=document.getElementById('wsClock');
   if(cEl)cEl.innerHTML='10:59:<span id="wsSecSpan" class="ws-sec">56</span>';
   var bEl=document.getElementById('wsBar');if(bEl)bEl.style.width='0%';
@@ -355,26 +356,27 @@ function enterWaitScreen(diff){
   startWaitTimer(diff);
 }
 function startWaitTimer(diff){
+  clearInterval(G.wsTimer);
   var elapsed=0;
-  var total=WS_TOTAL*10; // ticks of 100ms
-  var secStart=56;
-  var iv=setInterval(function(){
+  var total=WS_TOTAL*10;
+  G.wsTimer=setInterval(function(){
     elapsed++;
-    var secRaw=secStart+(elapsed/10);
-    var sec=Math.min(Math.floor(secRaw),59);
+    var sec=Math.min(Math.floor(56+(elapsed/10)),59);
     var pct=Math.min((elapsed/total)*100,100);
     var secEl=document.getElementById('wsSecSpan');
-    if(secEl) secEl.textContent=(sec<10?'0':'')+sec;
+    if(secEl)secEl.textContent=(sec<10?'0':'')+sec;
     var bar=document.getElementById('wsBar');
-    if(bar) bar.style.width=pct+'%';
+    if(bar)bar.style.width=pct+'%';
     if(elapsed>=total){
-      clearInterval(iv);
-      var secEl2=document.getElementById('wsSecSpan');
-      if(secEl2){
-        var clockEl=document.getElementById('wsClock');
-        if(clockEl) clockEl.innerHTML='11:<span class="ws-sec">00</span>:00';
-      }
-      setTimeout(function(){var ws=document.getElementById('wait-screen');if(ws){ws.classList.remove('active');ws.style.removeProperty('display');}startGame(diff);},120);
+      clearInterval(G.wsTimer);G.wsTimer=null;
+      var cEl=document.getElementById('wsClock');
+      if(cEl)cEl.innerHTML='11:<span class="ws-sec">00</span>:00';
+      setTimeout(function(){
+        if(document.querySelector('.screen.active')===document.getElementById('wait-screen')||(document.getElementById('wait-screen')&&document.getElementById('wait-screen').classList.contains('active'))){
+          showScreen('game-screen');
+          startGame(diff);
+        }
+      },120);
     }
   },100);
 }
@@ -383,7 +385,7 @@ function confirmSelect(){ if(!G_selectedDiff) return; enterWaitScreen(G_selected
 function drawFace(s){for(var i=0;i<4;i++){var e=document.getElementById('faceI'+i);if(e)e.style.display=(i===s?'block':'none');}}
 function drawScene(s){for(var i=0;i<4;i++){var e=document.getElementById('sceneI'+i);if(e)e.style.display=(i===s?'block':'none');}}
 
-var G={diff:'easy',timeLeft:45,maxTime:45,score:0,timer:null,swTimer:null,charState:0,current:null,selected:new Set(),bag:[],bagIdx:0,lastScore:0,lastDiff:'easy',initials:['','',''],iPos:0};
+var G={diff:'easy',timeLeft:45,maxTime:45,score:0,timer:null,swTimer:null,wsTimer:null,charState:0,current:null,selected:new Set(),bag:[],bagIdx:0,lastScore:0,lastDiff:'easy',initials:['','',''],iPos:0};
 var currentLevel='easy';
 var DIFF={easy:{t:45,name:'LOGO DON TEE'},normal:{t:30,name:'SUPER ME HOODIE'},hard:{t:20,name:'LIMITED COLLAB'}};
 var TITLES=['HYPE KING','QUEUE LORD','CART GOBLIN','MANUAL COP','LAST HUMAN','CLICK FARMER','QUEUE GHOST','BAG FUMBLER','LAG WARRIOR','SOLD OUT SOUL'];
@@ -430,6 +432,7 @@ function nextQ(){if(G.score===0&&G.current===null){return {id:'robot',type:'chec
 
 // ===== GAME =====
 function startGame(diff){
+  clearInterval(G.wsTimer);G.wsTimer=null;
   var d=DIFF[diff]; G.diff=diff; G.timeLeft=d.t; G.maxTime=d.t; G.score=0; G.current=null; G.charState=0; G.lastDiff=diff;
   buildBag();
   document.getElementById('scoreVal').textContent='0';
