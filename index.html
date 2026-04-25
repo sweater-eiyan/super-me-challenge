@@ -417,13 +417,7 @@ function tapRobot(){
 }
 function tapCell(i,e){var el=document.getElementById('cell-'+i);if(!el)return;if(e&&typeof e.preventDefault==='function')e.preventDefault();var now=Date.now();var last=Number(el.dataset.ts||0);if(now-last<120)return;el.dataset.ts=String(now);el.classList.add('hit');setTimeout(function(){if(el)el.classList.remove('hit');},70);if(G.selected.has(i)){G.selected.delete(i);el.classList.remove('sel');el.setAttribute('aria-pressed','false');}else{G.selected.add(i);el.classList.add('sel');el.setAttribute('aria-pressed','true');}var q=G.current;if(q&&q.type==='grid'&&Array.isArray(q.correct)&&G.selected.size===q.correct.length){setTimeout(function(){if(G.current===q&&typeof submitGrid==='function')submitGrid();},40);}}
 function submitGrid(){var q=G.current;if(!q||q.type!=='grid')return;var correct=Array.isArray(q.correct)?q.correct:[];var ok=(correct.length===G.selected.size)&&correct.every(function(v){return G.selected.has(v);});var fb=document.getElementById('fb');if(ok){if(fb){fb.className='feedback ok';fb.textContent='Correct. Proceed.';}sndCorrect();addScore();autoNext();}else{if(fb){fb.className='feedback ng';fb.textContent='Incorrect selection. Please try again.';}sndWrong();}}
-function tapChoice(idx,el){
-  document.querySelectorAll('.chbtn').forEach(function(b){b.disabled=true;});
-  var fb=document.getElementById('fb');
-  if(idx===G.current.correct){el.classList.add('ok');fb.className='feedback ok';fb.textContent='Correct. Proceed.';sndCorrect();addScore();autoNext();}
-  else{el.classList.add('ng');document.querySelectorAll('.chbtn')[G.current.correct].classList.add('ok');fb.className='feedback ng';fb.textContent='Incorrect. Try again.';sndWrong();}
-}
-
+function tapChoice(idx,el){var buttons=Array.from(document.querySelectorAll('.chbtn'));var fb=document.getElementById('fb');buttons.forEach(function(b){b.disabled=true;});if(idx===G.current.correct){el.classList.add('ok');if(fb){fb.className='feedback ok';fb.textContent='Correct. Proceed.';}sndCorrect();addScore();autoNext();}else{el.classList.add('ng');var okBtn=buttons[G.current.correct];if(okBtn)okBtn.classList.add('ok');if(fb){fb.className='feedback ng';fb.textContent='Incorrect. Try again.';}sndWrong();setTimeout(function(){buttons.forEach(function(b){b.disabled=false;b.classList.remove('ng','ok');});if(fb){fb.className='feedback';fb.textContent='';}},700);}}
 // ===== SOLD OUT =====
 function soldOut(){
   var fl=document.getElementById('flash');
