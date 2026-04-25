@@ -385,6 +385,8 @@ function confirmSelect(){ if(!G_selectedDiff) return; enterWaitScreen(G_selected
 function drawFace(s){for(var i=0;i<4;i++){var e=document.getElementById('faceI'+i);if(e)e.style.display=(i===s?'block':'none');}}
 function drawScene(s){for(var i=0;i<4;i++){var e=document.getElementById('sceneI'+i);if(e)e.style.display=(i===s?'block':'none');}}
 
+var WORKER_URL='https://super-me-ranking.a8-jay808.workers.dev';
+
 var G={diff:'easy',timeLeft:45,maxTime:45,score:0,timer:null,swTimer:null,wsTimer:null,charState:0,current:null,selected:new Set(),bag:[],bagIdx:0,lastScore:0,lastDiff:'easy',initials:['','',''],iPos:0};
 var currentLevel='easy';
 var DIFF={easy:{t:45,name:'LOGO DON TEE'},normal:{t:30,name:'SUPER ME HOODIE'},hard:{t:20,name:'LIMITED COLLAB'}};
@@ -527,10 +529,27 @@ function getScores(d){try{return JSON.parse(localStorage.getItem('smc_'+d)||'[]'
 function saveScore(d,ini,sc){var l=getScores(d);l.push({ini:ini,score:sc,ts:Date.now()});l.sort(function(a,b){return b.score-a.score||a.ts-b.ts;});localStorage.setItem('smc_'+d,JSON.stringify(l.slice(0,10)));}
 function loadRanking(diff){
   var d=diff||'easy'; currentLevel=d;
-  ['easy','normal','hard'].forEach(function(k){var el=document.getElementById('tab-'+k); if(el) el.className='tab'+(k===d?' act':'');});
-  var list=getScores(d); var h='';
-  for(var i=0;i<10;i++){var row=list[i];if(row){h+='<div class="rrow'+(i<3?' top':'')+'"><div class="rpos">'+(i+1)+'.</div><div class="rini">'+row.ini+'</div><div class="rmeta"><div class="rscore">'+row.score+' VER.</div><div class="rtitle">'+(TITLES[i]||'')+'</div></div></div>';}else{h+='<div class="rrow empty"><div class="rpos">'+(i+1)+'.</div><div class="rini">---</div><div class="rmeta"><div class="rscore">-</div><div class="rtitle">NO DATA</div></div></div>';}}
-  var box=document.getElementById('ranklist'); if(box) box.innerHTML=h;
+  ['easy','normal','hard'].forEach(function(k){
+    var el=document.getElementById('tab-'+k);
+    if(el)el.className='tab'+(k===d?' act':'');
+  });
+  function renderList(list){
+    var h='';
+    for(var i=0;i<10;i++){
+      var row=list[i];
+      if(row){h+='<div class="rrow'+(i<3?' top':'')+'"><div class="rpos">'+(i+1)+'.</div><div class="rini">'+(row.name||row.ini||'???')+'</div><div class="rmeta"><div class="rscore">'+row.score+' VER.</div><div class="rtitle">'+(TITLES[i]||'')+'</div></div></div>';}
+      else{h+='<div class="rrow empty"><div class="rpos">'+(i+1)+'.</div><div class="rini">---</div><div class="rmeta"><div class="rscore">-</div><div class="rtitle">NO DATA</div></div></div>';}
+    }
+    var box=document.getElementById('ranklist');if(box)box.innerHTML=h;
+  }
+  var local=getScores(d);
+  renderList(local);
+  fetch(WORKER_URL+'/rankings?difficulty='+d)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data&&data.ok&&Array.isArray(data.rankings))renderList(data.rankings);
+    })
+    .catch(function(){});
 }
 
 function switchTab(d,btn){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');loadRanking(d);}
@@ -565,7 +584,34 @@ function pressKey(k){
   else{G.initials[G.iPos]=k;if(G.iPos<2)G.iPos++;}
   renderIboxes();
 }
-function submitInitials(){if(G.initials.some(function(v){return !v;}))return;saveScore(G.lastDiff,G.initials.join(''),G.lastScore);showScreen('ranking-screen');var diffs=['easy','normal','hard'];var idx=diffs.indexOf(G.lastDiff);document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',i===idx);});loadRanking(G.lastDiff);}
+function submitInitials(){
+  if(G.initials.some(function(v){return !v;}))return;
+  var name=G.initials.join('');
+  saveScore(G.lastDiff,name,G.lastScore);
+  showScreen('ranking-screen');
+  loadRanking(G.lastDiff);
+  fetch(WORKER_URL+'/submit',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({difficulty:G.lastDiff,name:name,score:G.lastScore})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data&&data.ok&&Array.isArray(data.rankings)){
+      function renderList(list){
+        var h='';
+        for(var i=0;i<10;i++){
+          var row=list[i];
+          if(row){h+='<div class="rrow'+(i<3?' top':'')+'"><div class="rpos">'+(i+1)+'.</div><div class="rini">'+(row.name||row.ini||'???')+'</div><div class="rmeta"><div class="rscore">'+row.score+' VER.</div><div class="rtitle">'+(TITLES[i]||'')+'</div></div></div>';}
+          else{h+='<div class="rrow empty"><div class="rpos">'+(i+1)+'.</div><div class="rini">---</div><div class="rmeta"><div class="rscore">-</div><div class="rtitle">NO DATA</div></div></div>';}
+        }
+        var box=document.getElementById('ranklist');if(box)box.innerHTML=h;
+      }
+      renderList(data.rankings);
+    }
+  })
+  .catch(function(){});
+}
 
 // ===== INIT =====
 
