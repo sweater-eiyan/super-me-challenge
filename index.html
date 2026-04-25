@@ -16,7 +16,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Int
 .screen.active{display:flex}
 
 /* ── TITLE ── */
-#title-screen{background:#000;overflow:hidden}
+#title-screen{background:#000;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 .t-logo{display:none}
 .t-logo-box{background:var(--red);border:3px solid #fff;padding:10px 20px;text-align:center;width:230px}
 .t-logo-box .big{font-size:26px;font-weight:900;color:#fff;letter-spacing:.04em;font-style:italic}
@@ -24,9 +24,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Int
 .t-title{display:none}
 .t-title h1{font-size:28px;font-weight:900;color:var(--yellow);text-shadow:2px 2px 0 #600;letter-spacing:.06em;line-height:1.1}
 .t-title p{font-size:10px;color:var(--soft);letter-spacing:.1em;margin-top:3px}
-.t-hero{flex:1 1 auto;min-height:0;overflow:hidden;margin:0;padding:0;background:#000}
-.t-hero img{width:100%;height:100%;object-fit:contain;object-position:center top;display:block;background:#000}
-.t-actions{flex:0 0 auto;padding:10px 20px 16px;display:flex;flex-direction:column;gap:10px;background:#000}
+.title-hero-only{flex:1 1 auto;min-height:0;overflow:hidden;margin:0;padding:0;background:#000;display:flex;align-items:flex-start;justify-content:center}
+.title-hero-only img{width:100%;height:100%;object-fit:contain;object-position:center top;display:block;background:#000}
+.title-buttons{flex:0 0 auto;padding:10px 20px 16px;display:flex;flex-direction:column;gap:10px;background:#000}
 .pbtn{width:100%;border:none;border-radius:8px;padding:15px;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:.08em}
 .pbtn.prim{background:var(--red);color:#fff;border:2px solid #ff4444}
 .pbtn.sec{background:#1a1a1a;color:#ccc;border:1px solid #333}
@@ -136,7 +136,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Int
   .cb-row{padding:10px}
 }
 
-#title-screen{background:#000;overflow:hidden}
+#title-screen{background:#000;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 
 
 
@@ -148,7 +148,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Int
 
 
 
-#title-screen{background:#000;overflow:hidden}
+#title-screen{background:#000;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 
 
 
@@ -274,10 +274,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Int
     <div class="tab-row">
       <div class="tab act" id="tab-easy" onclick="loadRanking('easy')">EASY</div>
       <div class="tab" id="tab-normal" onclick="loadRanking('normal')">NORMAL</div>
-      <div class="tab" id="tab-hard" onclick="loadRanki
+      <div class="tab" id="tab-hard" onclick="loadRanking('hard')">HARD</div>
+    </div>
+    <div id="ranklist" class="rank-list"></div>
+    <button class="pbtn sec" onclick="showScreen('title-screen')" style="width:100%;margin-top:12px">TITLE</button>
+  </div>
+</div>
+
+<script>
 
 
-// ---- UI helpers for new layout ----
 var G_selectedDiff = null;
 function selectCard(diff){
   G_selectedDiff = diff;
@@ -286,18 +292,14 @@ function selectCard(diff){
     if(c) c.classList.toggle('sel', d===diff);
   });
   var btn = document.getElementById('confirmBtn');
-  if(btn){btn.disabled=false; btn.style.opacity='1';}
+  if(btn){btn.disabled=false;btn.style.opacity='1';}
 }
-function confirmSelect(){
-  if(!G_selectedDiff) return;
-  startGame(G_selectedDiff);
-}
-
-
-// ---- STATE IMG SWITCH ----
+function confirmSelect(){ if(!G_selectedDiff) return; startGame(G_selectedDiff); }
 function drawFace(s){for(var i=0;i<4;i++){var e=document.getElementById('faceI'+i);if(e)e.style.display=(i===s?'block':'none');}}
 function drawScene(s){for(var i=0;i<4;i++){var e=document.getElementById('sceneI'+i);if(e)e.style.display=(i===s?'block':'none');}}
+
 var G={diff:'easy',timeLeft:45,maxTime:45,score:0,timer:null,swTimer:null,charState:0,current:null,selected:new Set(),bag:[],bagIdx:0,lastScore:0,lastDiff:'easy',initials:['','',''],iPos:0};
+var currentLevel='easy';
 var DIFF={easy:{t:45,name:'LOGO DON TEE'},normal:{t:30,name:'SUPER ME HOODIE'},hard:{t:20,name:'LIMITED COLLAB'}};
 var TITLES=['HYPE KING','QUEUE LORD','CART GOBLIN','MANUAL COP','LAST HUMAN','CLICK FARMER','QUEUE GHOST','BAG FUMBLER','LAG WARRIOR','SOLD OUT SOUL'];
 var QS=[
@@ -305,15 +307,11 @@ var QS=[
   {id:'lights',type:'grid',title:'Select all squares with traffic lights',cells:['🚦','🚗','🚥','🛑','🚦','🚥','🚗','🛑','🚦'],correct:[0,2,4,5,8]},
   {id:'bikes',type:'grid',title:'Select all squares with bicycles',cells:['🚲','🛵','🚲','🏍️','🚲','🛴','🚲','🛵','🚲'],correct:[0,2,4,6,8]},
   {id:'m1',type:'choice',title:'What is 2 + 3?',choices:['4','5','6','7'],correct:1},
-  {id:'m2',type:'choice',title:'What is 7 - 2?',choices:['3','4','5','6'],correct:2},
-  {id:'m3',type:'choice',title:'What is 3 + 4?',choices:['5','6','7','8'],correct:2},
-  {id:'m4',type:'choice',title:'What is 10 - 1?',choices:['7','8','9','10'],correct:2}
+  {id:'m2',type:'choice',title:'What is 7 - 2?',choices:['3','4','5','6'],correct:2}
 ];
 
-
-<script>
-function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');closeOverlay();}
-function closeOverlay(){document.getElementById('soldout').classList.remove('active');}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='none';});var el=document.getElementById(id);if(!el)return;el.classList.add('active');el.style.display='flex';closeOverlay();if(id==='select-screen'){if(typeof renderGrid==='function')renderGrid();if(typeof updateChips==='function')updateChips();}if(id==='ranking-screen'){if(typeof loadRanking==='function')loadRanking((typeof currentLevel!=='undefined'&&currentLevel)||G.lastDiff||'easy');}}
+function closeOverlay(){var s=document.getElementById('soldout');if(s)s.classList.remove('active');}
 
 
 function clr(){}
@@ -327,10 +325,10 @@ function drawHoodie(){}
 function drawCollab(){}
 
 // ============ FACE ============
-function drawFace(){}
+function drawFace(s){for(var i=0;i<4;i++){var e=document.getElementById('faceI'+i);if(e)e.style.display=(i===s?'block':'none');}}
 
 // ============ SCENE ============
-function drawScene(){}
+function drawScene(s){for(var i=0;i<4;i++){var e=document.getElementById('sceneI'+i);if(e)e.style.display=(i===s?'block':'none');}}
 
 function drawTitleScene(){}
 
@@ -480,10 +478,7 @@ function pressKey(k){
 function submitInitials(){if(G.initials.some(function(v){return !v;}))return;saveScore(G.lastDiff,G.initials.join(''),G.lastScore);showScreen('ranking-screen');var diffs=['easy','normal','hard'];var idx=diffs.indexOf(G.lastDiff);document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',i===idx);});loadRanking(G.lastDiff);}
 
 // ===== INIT =====
-window.addEventListener('load',function(){
-  drawFace(0); drawScene(0);
-  buildKbd(); loadRanking('easy');
-});
+
 
 // ===== SOUND =====
 var AC=null;
@@ -503,7 +498,10 @@ function sndTick(){beep(800,.03,'square',.06);}
 function sndCheckbox(){beep(528,.05,'sine',.14);setTimeout(function(){beep(792,.08,'sine',.10);},60);}
 function sndSoldOut(){beep(140,.25,'sawtooth',.22);setTimeout(function(){beep(100,.35,'sawtooth',.22);},260);setTimeout(function(){beep(80,.5,'sawtooth',.18);},620);}
 function sndStart(){beep(330,.05,'square',.10);setTimeout(function(){beep(440,.05,'square',.10);},60);setTimeout(function(){beep(660,.08,'square',.12);},120);}
-window.titleButtonFixBound=true;window.addEventListener('load',function(){var s=document.getElementById('titleStartBtn');var r=document.getElementById('titleRankBtn');if(s){s.addEventListener('click',function(e){e.preventDefault();showScreen('select-screen');});}if(r){r.addEventListener('click',function(e){e.preventDefault();showScreen('ranking-screen');loadRanking('easy');});}});
+document.addEventListener('click',function(e){var t=e.target.closest('#titleStartBtn,#titleRankBtn');if(!t)return;e.preventDefault();if(t.id==='titleStartBtn'){showScreen('select-screen');}else{showScreen('ranking-screen');}});
+
+
+
 
 </script>
 </body>
