@@ -526,10 +526,13 @@ function soldOut(){
 function getScores(d){try{return JSON.parse(localStorage.getItem('smc_'+d)||'[]');}catch(e){return[];}}
 function saveScore(d,ini,sc){var l=getScores(d);l.push({ini:ini,score:sc,ts:Date.now()});l.sort(function(a,b){return b.score-a.score||a.ts-b.ts;});localStorage.setItem('smc_'+d,JSON.stringify(l.slice(0,10)));}
 function loadRanking(diff){
-  var list=getScores(diff||'easy'); var h='';
-  for(var i=0;i<10;i++){var row=list[i];if(row){h+='<div class="rrow'+(i<3?' top':'')+'"><div class="rpos">'+(i+1)+'.</div><div class="rini">'+row.ini+'</div><div class="rmeta"><div class="rscore">'+row.score+' VER.</div><div class="rtitle">'+(TITLES[i]||'')+'</div></div></div>';}else{h+='<div class="rrow empty"><div class="rpos">'+(i+1)+'.</div><div class="rini">---</div><div class="rmeta"><div class="rscore">-</div></div></div>';}}
-  document.getElementById('ranklist').innerHTML=h;
+  var d=diff||'easy'; currentLevel=d;
+  ['easy','normal','hard'].forEach(function(k){var el=document.getElementById('tab-'+k); if(el) el.className='tab'+(k===d?' act':'');});
+  var list=getScores(d); var h='';
+  for(var i=0;i<10;i++){var row=list[i];if(row){h+='<div class="rrow'+(i<3?' top':'')+'"><div class="rpos">'+(i+1)+'.</div><div class="rini">'+row.ini+'</div><div class="rmeta"><div class="rscore">'+row.score+' VER.</div><div class="rtitle">'+(TITLES[i]||'')+'</div></div></div>';}else{h+='<div class="rrow empty"><div class="rpos">'+(i+1)+'.</div><div class="rini">---</div><div class="rmeta"><div class="rscore">-</div><div class="rtitle">NO DATA</div></div></div>';}}
+  var box=document.getElementById('ranklist'); if(box) box.innerHTML=h;
 }
+
 function switchTab(d,btn){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');loadRanking(d);}
 
 // ===== INITIALS =====
