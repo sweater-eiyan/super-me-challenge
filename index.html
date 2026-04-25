@@ -370,7 +370,7 @@ function startWaitTimer(diff){
         var clockEl=document.getElementById('wsClock');
         if(clockEl) clockEl.innerHTML='11:<span class="ws-sec">00</span>:00';
       }
-      setTimeout(function(){ startGame(diff); },120);
+      setTimeout(function(){var ws=document.getElementById('wait-screen');if(ws){ws.classList.remove('active');ws.style.display='none';}startGame(diff);},120);
     }
   },100);
 }
