@@ -186,6 +186,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Int
 .ws-dot{width:8px;height:8px;border-radius:50%;background:#d10000;display:inline-block;margin-right:8px;animation:wsdot .7s ease-in-out infinite alternate;}
 .ws-hint{font-size:9px;letter-spacing:.12em;color:#3a3a3a;margin-top:16px;}
 @keyframes wsdot{from{opacity:.25}to{opacity:1}}
+
+.cell-display{aspect-ratio:1/1;background:#fff;border:2px solid #d0d0d0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px;user-select:none;pointer-events:none;}
+.count-hint{font-size:11px;color:#888;letter-spacing:.12em;text-align:center;margin:4px 0 10px;}
+.cell-display{aspect-ratio:1/1;background:#fff;border:2px solid #d0d0d0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px;user-select:none;pointer-events:none;}
+.count-hint{font-size:11px;color:#888;letter-spacing:.12em;text-align:center;margin:4px 0 10px;}
 </style>
 </head>
 <body>
@@ -299,7 +304,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Int
 
 <!-- INITIALS -->
 <div id="initials-screen" class="screen">
-  <div class="ini-title">ENTER YOUR INITIALS</div>
+  <div class="ini-title">DROP YOUR TAG</div>
   <div class="ini-slots">
     <div class="ini-slot" id="isl0">_</div>
     <div class="ini-slot" id="isl1">_</div>
@@ -388,7 +393,13 @@ var QS=[
   {id:'lights',type:'grid',title:'Select all squares with traffic lights',cells:['🚦','🚗','🚥','🛑','🚦','🚥','🚗','🛑','🚦'],correct:[0,2,4,5,8]},
   {id:'bikes',type:'grid',title:'Select all squares with bicycles',cells:['🚲','🛵','🚲','🏍️','🚲','🛴','🚲','🛵','🚲'],correct:[0,2,4,6,8]},
   {id:'m1',type:'choice',title:'What is 2 + 3?',choices:['4','5','6','7'],correct:1},
-  {id:'m2',type:'choice',title:'What is 7 - 2?',choices:['3','4','5','6'],correct:2}
+  {id:'m2',type:'choice',title:'What is 7 - 2?',choices:['3','4','5','6'],correct:2},
+  {id:'count1',type:'count',title:'How many 🟦 are there?',cells:['🟦','🦵','💩','🟦','🦵','💩','🟦','💩','🟦'],choices:['2','3','4','5'],correct:2},
+  {id:'count2',type:'count',title:'How many 👴 are there?',cells:['🍞','👴','🥖','🥐','🍞','🥖','👴','🥐','🍞'],choices:['1','2','3','4'],correct:1},
+  {id:'count3',type:'count',title:'How many 🪦 are there?',cells:['🏴\u200d☠️','🪦','👒','🏴\u200d☠️','🪦','👒','🏴\u200d☠️','👒','🪦'],choices:['2','3','4','5'],correct:1},
+  {id:'odo1',type:'grid',title:'Select the one that does NOT belong',cells:['👨\u200d🔧','👨\u200d🚒','👨\u200d🍳','🤵\u200d♂️','🤓','👨\u200d🔧','👨\u200d🚒','👨\u200d🍳','🤵\u200d♂️'],correct:[4]},
+  {id:'odo2',type:'grid',title:'Select the one that does NOT belong',cells:['🍫','🍪','🍩','🍮','🍢','🍫','🍪','🍩','🍮'],correct:[4]},
+  {id:'odo3',type:'grid',title:'Select the one that does NOT belong',cells:['👨\u200d🔧','👨\u200d🚒','👨\u200d🍳','🤵\u200d♂️','👨\u200d🔧','🍠','👨\u200d🚒','👨\u200d🍳','🤵\u200d♂️'],correct:[5]}
 ];
 
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='none';});var el=document.getElementById(id);if(!el)return;el.classList.add('active');el.style.display='flex';closeOverlay();if(id==='select-screen'){if(typeof renderGrid==='function')renderGrid();if(typeof updateChips==='function')updateChips();}if(id==='ranking-screen'){if(typeof loadRanking==='function')loadRanking((typeof currentLevel!=='undefined'&&currentLevel)||G.lastDiff||'easy');}}
@@ -471,6 +482,13 @@ function renderQ(){
     for(var i=0;i<q.cells.length;i++){h+='<button type="button" class="cell" id="cell-'+i+'" onpointerdown="tapCell('+i+',event)" onclick="event.preventDefault()" aria-pressed="false">'+q.cells[i]+'</button>';}
     h+='</div><button class="verifybtn" onclick="submitGrid()">VERIFY</button>';
     h+='<div id="fb" class="feedback"></div>';
+  } else if(q.type==='count'){
+    h+='<div class="count-hint">COUNT THE EMOJI BELOW</div>';
+    h+='<div class="qtitle">'+q.title+'</div><div class="grid">';
+    for(var ci=0;ci<q.cells.length;ci++){h+='<div class="cell cell-display">'+q.cells[ci]+'</div>';}
+    h+='</div><div class="choices">';
+    for(var cj=0;cj<q.choices.length;cj++){h+='<button class="chbtn" onclick="tapChoice('+cj+',this)">'+q.choices[cj]+'</button>';}
+    h+='</div><div id="fb" class="feedback"></div>';
   } else if(q.type==='choice'){
     h+='<div class="qtitle">'+q.title+'</div><div class="choices">';
     for(var j=0;j<q.choices.length;j++){h+='<button class="chbtn" onclick="tapChoice('+j+',this)">'+q.choices[j]+'</button>';}
@@ -478,6 +496,7 @@ function renderQ(){
   }
   document.getElementById('qpanel').innerHTML=h;
 }
+
 function tapRobot(){
   var b=document.getElementById('rcbox'); if(!b||b.classList.contains('checked'))return;
   b.classList.add('checked'); b.textContent='✓';
